@@ -83,6 +83,13 @@ def clean_html_tags(text):
 def clean_non_ascii(text):
     return ''.join(i for i in text if ord(i) < 128)
 
+def clean_main_quotes(text):
+    if text.startswith("\""):
+        text = text[1:]
+    if text.endswith("\""):
+        text = text[:-1]
+    return text
+
 def is_valid_script(text):
     return "<HOOK>" in text and "<BODY>" in text and "<OUTRO>" in text and "</HOOK>" in text and "</BODY>" in text and "</OUTRO>" in text
 
@@ -117,7 +124,7 @@ def generate_script(news_content):
     dirty_summary = clean_em_dashes(dirty_summary)
     dirty_summary = clean_colons(dirty_summary)
 
-    article_summary = clean_double_space(dirty_summary)
+    article_summary = clean_main_quotes(clean_double_space(dirty_summary))
 
     response = client.chat(
         model=MODEL,
@@ -160,9 +167,9 @@ def generate_script(news_content):
     script = clean_non_ascii(script)
     script = clean_double_space(script)
     
-    HOOK = clean_html_tags(get_within_tags("HOOK", script))
-    BODY = clean_html_tags(get_within_tags("BODY", script))
-    OUTRO = clean_html_tags(get_within_tags("OUTRO", script))
+    HOOK = clean_main_quotes(clean_html_tags(get_within_tags("HOOK", script)))
+    BODY = clean_main_quotes(clean_html_tags(get_within_tags("BODY", script)))
+    OUTRO = clean_main_quotes(clean_html_tags(get_within_tags("OUTRO", script)))
 
     script = f"<HOOK>{HOOK}</HOOK>\n<BODY>{BODY}</BODY>\n<OUTRO>{OUTRO}</OUTRO>"
 
@@ -190,8 +197,8 @@ if __name__ == "__main__":
         news_content = file.read()
         
     # write script to file
-    for i in range(5):
-        script_name = f"script_{i}.txt"
-        generate_script_file(news_content, script_name, "tests")
+    for i in range(2):
+        script_name = f"script_{i}"
+        generate_script_file(news_content, script_name, "tests/scripts")
         print(f"Generated script {script_name}")
     print("Done generating scripts")

@@ -14,3 +14,7 @@ If you are running ollama on windows and the backend on WSL
 Open windows powershell
 - setx OLLAMA_HOST "0.0.0.0" /m
 - setx OLLAMA_ORIGINS "*" /m
+
+This will allow WSL to access the OLLAMA api. Make sure to replace localhost with your windows computers IPv4
+
+Address as WSL and windows have two different network configurations.
