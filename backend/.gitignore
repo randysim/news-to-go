@@ -1,5 +1,6 @@
-# test files
+# generated folders
 tests/
+audio/
 
 # Firefox Web Driver
 geckodriver

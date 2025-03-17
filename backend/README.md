@@ -18,3 +18,7 @@ Open windows powershell
 This will allow WSL to access the OLLAMA api. Make sure to replace localhost with your windows computers IPv4
 
 Address as WSL and windows have two different network configurations.
+
+## Fix preload_models error
+
+- Click into preload_models and search for "torch.load". On that line, set weights_only=False in the function call.
