@@ -66,7 +66,7 @@ def scrape_generic(driver, url):
         "”": "\"",
         "’": "'",
         "‘": "'",
-        "—": "-",
+        "—": ", ",
         "…": "...",
         "\n\n": "\n",
         "\t": "",
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     print(f"Fetching URL {TEST_URL}")
 
     title, content = scrape_generic(driver, TEST_URL)
-    print(f"Retrieved Article f{title}")
+    print(f"Retrieved Article {title}")
 
     # Write to file in tests/
     if not os.path.exists("tests"):
