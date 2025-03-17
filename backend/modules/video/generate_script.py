@@ -168,11 +168,11 @@ def generate_script(news_content):
 
     return article_summary, script, default_summary, default_script
 
-def generate_script_file(news_content, script_name):
+def generate_script_file(news_content, script_name, directory):
     summary, script, default_summary, default_script = generate_script(news_content)
-    with open(script_name, "w") as f:
+    with open(f"{directory}/{script_name}.txt", "w") as f:
         f.write(f"SUMMARY:\n{summary}\n\nSCRIPT:\n{script}")
-    with open(f"default_{script_name}.txt", "w") as f:
+    with open(f"{directory}/default_{script_name}.txt", "w") as f:
         f.write(f"SUMMARY:\n{default_summary}\n\nSCRIPT:\n{default_script}")
 
 if __name__ == "__main__":
@@ -191,6 +191,6 @@ if __name__ == "__main__":
         # write script to file
         for i in range(10):
             script_name = f"script_{i}.txt"
-            generate_script_file(news_content, script_name)
+            generate_script_file(news_content, script_name, "tests")
             print(f"Generated script {script_name}")
         print("Done generating scripts")
