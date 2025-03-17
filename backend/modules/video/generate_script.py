@@ -185,12 +185,13 @@ if __name__ == "__main__":
     if not os.path.exists("tests/scripts"):
         os.makedirs("tests/scripts")
 
+    news_content = ""
     with open(PATH_TO_NEWS, "r") as file:
         news_content = file.read()
         
-        # write script to file
-        for i in range(10):
-            script_name = f"script_{i}.txt"
-            generate_script_file(news_content, script_name, "tests")
-            print(f"Generated script {script_name}")
-        print("Done generating scripts")
+    # write script to file
+    for i in range(5):
+        script_name = f"script_{i}.txt"
+        generate_script_file(news_content, script_name, "tests")
+        print(f"Generated script {script_name}")
+    print("Done generating scripts")
