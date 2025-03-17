@@ -1,0 +1,1 @@
+from .scraper.scrape_generic import scrape_generic
