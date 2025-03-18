@@ -108,9 +108,9 @@ The People's Defence Force (PDF) has targeted civilians involved in election pre
 
     fixed_captions = fix_captions(generate_captions(TEST_AUDIO), TEST_SCRIPT)
 
-    if not os.path.exists("captions"):
-        os.makedirs("captions")
+    if not os.path.exists("tests/captions"):
+        os.makedirs("tests/captions")
     
-    with open("captions/test_script_53242.txt", "w") as f:
+    with open("tests/captions/test_script_53242.txt", "w") as f:
         for caption in fixed_captions:
             f.write(f"{caption[0]}:{caption[1]}:{caption[2]}\n")
