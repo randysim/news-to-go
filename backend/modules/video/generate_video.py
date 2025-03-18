@@ -72,6 +72,9 @@ def generate_video(news_url, directory=None):
     print(f"Generating captions for {title}...")
     captions = fix_captions(generate_captions(audio_file_path), script)
 
+    print(f"Generating sentence starts for {title}...")
+    sentence_starts = get_sentence_starts(script, captions)
+
     every_n_sentences = 2
     print(f"Generating images for {title}...")
     keywords = generate_keywords(script, every_n_sentences)
@@ -94,7 +97,15 @@ def generate_video(news_url, directory=None):
 
         current_sentence += every_n_sentences
     
-
+    """
+    HAVE:
+    - path to audio file
+    - path to media files (and for what sentence they begin) <- could be image or video
+    - captions and their start and end times
+    - sentence starts and their start and end times 
+    """
+    
+    
     
 
         

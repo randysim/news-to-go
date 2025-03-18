@@ -22,3 +22,11 @@ Address as WSL and windows have two different network configurations.
 ## Run individual scripts as test
 
 ``python -m modules.folder.script_name`` without the .py
+
+## .env file format
+```
+DRIVER_PATH=<PATH TO WEBDRIVER>
+PEXELS_API_KEY=
+OLLAMA_IP=<IP OF COMPUTER YOU ARE HOSTING OR LOCALHOST IF SAME COMPUTER>
+OLLAMA_MODEL=<OLLAMA LLM MODEL>
+```

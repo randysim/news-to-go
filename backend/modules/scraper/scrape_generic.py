@@ -8,18 +8,21 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import os
 
-DRIVER_PATH = os.getenv("DRIVER_PATH")
-DRIVER = Service(executable_path="/snap/bin/firefox.geckodriver")
-firefox_options = Options()
-
-user_agents = ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"]
-firefox_options.add_argument(f"user-agent={user_agents[0]}")
-firefox_options.add_argument("--headless")
-
-driver = webdriver.Firefox(service=DRIVER, options=firefox_options)
-driver.maximize_window()
+driver = None
 
 def scrape_generic(url):
+    if not driver:
+        DRIVER_PATH = os.getenv("DRIVER_PATH")
+        DRIVER = Service(executable_path=DRIVER_PATH)
+        firefox_options = Options()
+
+        user_agents = ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"]
+        firefox_options.add_argument(f"user-agent={user_agents[0]}")
+        firefox_options.add_argument("--headless")
+
+        driver = webdriver.Firefox(service=DRIVER, options=firefox_options)
+        driver.maximize_window()
+
     driver.get(url)
 
     # Wait for the page to load
