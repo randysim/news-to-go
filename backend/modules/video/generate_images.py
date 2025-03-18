@@ -1,13 +1,14 @@
 import re
+import os
+import requests
 from ollama import Client
 from .clean import get_within_tags, clean_think, clean_double_newlines, clean_double_space, clean_main_quotes, clean_non_ascii, clean_colons, clean_html_tags
-MODELS = ["llama3.2", "deepseek-r1", "mistral"]
 
 client = Client(
-    host="http://172.22.160.1:11434"
+    host=f"http://{os.getenv('OLLAMA_IP')}:11434"
 )
 
-MODEL = MODELS[1]
+MODEL = os.getenv("OLLAMA_MODEL")
 
 KEYWORD_MESSAGE = """You are a specialized keyword generator for image searches. When given text, generate ONE highly specific two-word keyword phrase that precisely captures the unique technical context of the provided content.
 
@@ -95,6 +96,61 @@ def generate_keywords(script, every_n_sentences=2):
         keywords.append(generate_keyword(fragment))
     
     return keywords
+
+def search_media(keyword, nth=0):
+    # Base URLs for Pexels API
+    VIDEO_SEARCH_URL = 'https://api.pexels.com/videos/search'
+    IMAGE_SEARCH_URL = 'https://api.pexels.com/v1/search'
+
+    # Combine keywords for the search
+    combined_keywords = ' '.join(keyword)
+
+    # Headers for the API request
+    headers = {
+        'Authorization': os.getenv("PEXELS_API_KEY")
+    }
+
+    # Step 1: Search for a video with combined keywords
+    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': nth+1})
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('videos') and len(data['videos']) > nth:
+            # Get the nth video and its highest quality file
+            video_files = data['videos'][nth]['video_files']
+            if video_files:
+                # Sort by height (resolution) in descending order and get the first one
+                video_files.sort(key=lambda x: x.get('height', 0), reverse=True)
+                return video_files[0]['link']
+
+    # Step 2: Search for a video with the first keyword only
+    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': nth+1})
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('videos') and len(data['videos']) > nth:
+            video_files = data['videos'][nth]['video_files']
+            if video_files:
+                video_files.sort(key=lambda x: x.get('height', 0), reverse=True)
+                return video_files[0]['link']
+
+    # Step 3: Search for an image with combined keywords
+    response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': nth+1})
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('photos') and len(data['photos']) > nth:
+            return data['photos'][nth]['src']['original']
+
+    # Step 4: Search for an image with the first keyword only
+    response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': nth+1})
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('photos') and len(data['photos']) > nth:
+            return data['photos'][nth]['src']['original']
+
+    # Step 5: Return a default image if all searches fail
+    return 'https://images.pexels.com/photos/281260/pexels-photo-281260.jpeg'
+
+
+
 
 if __name__ == "__main__":
     TEST_SCRIPT = """<HOOK>Tumult in Myanmar's political landscape as the military government pushes for national elections amid growing pressure from domestic and foreign influences.</HOOK>

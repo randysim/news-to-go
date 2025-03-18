@@ -2,13 +2,11 @@ from ollama import Client
 from .clean import clean_think, clean_bullet_points, clean_characters, clean_double_newlines, clean_em_dashes, clean_double_space, clean_colons, get_within_tags, clean_html_tags, clean_non_ascii, clean_main_quotes
 import os
 
-MODELS = ["llama3.2", "deepseek-r1", "mistral"]
-
 client = Client(
-    host="http://172.22.160.1:11434"
+    host=f"http://{os.getenv('OLLAMA_IP')}:11434"
 )
 
-MODEL = MODELS[1]
+MODEL = os.getenv("OLLAMA_MODEL")
 SUMMARY_SYSTEM_MESSAGE = """You are a helpful summarizer. You will be given text to summarize into a paragraph. Write in complete english sentences and avoid referencing the text itself (e.g. phrases like "the text states" or "the text mentions")."""
 
 SCRIPT_SYSTEM_MESSAGE = """You are a video script writer. You will be given a paragraph summary of a topic. You must turn the summary into a script in english for a video.

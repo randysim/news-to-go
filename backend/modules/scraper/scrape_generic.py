@@ -80,7 +80,7 @@ def scrape_generic(driver, url):
         
 
 if __name__ == "__main__":
-    DRIVER_PATH = "/snap/bin/firefox.geckodriver"
+    DRIVER_PATH = os.getenv("DRIVER_PATH")
     DRIVER = Service(executable_path=DRIVER_PATH)
     firefox_options = Options()
 
