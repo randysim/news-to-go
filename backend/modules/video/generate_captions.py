@@ -1,7 +1,7 @@
 import whisper
 import os
 
-from .clean import get_within_tags
+from .clean import get_within_tags, clean_double_space
 
 model = whisper.load_model("medium")
 
@@ -11,7 +11,9 @@ def generate_captions(audio_file):
     captions = []
     for segment in result["segments"]:
         for word in segment["words"]:
-            captions.append([word["word"].strip(), word["start"].item(), word["end"].item()])
+            start = word["start"].item() if hasattr(word["start"], "item") else word["start"]
+            end = word["end"].item() if hasattr(word["end"], "item") else word["end"]
+            captions.append([word["word"].strip(), start, end])
     
     return captions
 
@@ -19,8 +21,7 @@ def fix_captions(captions, script):
     script_text = get_within_tags("HOOK", script) + " " + get_within_tags("BODY", script) + " " + get_within_tags("OUTRO", script)
     script_text = script_text.replace("\n", " ")
     
-    while "  " in script_text:
-        script_text = script_text.replace("  ", " ")
+    script_text = clean_double_space(script_text)
     
     script_words = script_text.split(" ")
     

@@ -27,6 +27,7 @@ Format your response as: <KEYWORD>{your two-word keyword}</KEYWORD>
 
 def generate_fragments(script, image_every=2):
     text = get_within_tags("HOOK", script) + " " + get_within_tags("BODY", script) + " " + get_within_tags("OUTRO", script)
+    text = clean_double_space(text)
     sentences = re.split(r'(?<=[.!?])\s+', text)
 
     fragments = []

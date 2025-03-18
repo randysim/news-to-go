@@ -13,11 +13,9 @@ SCRIPT_SYSTEM_MESSAGE = """You are a video script writer. You will be given a pa
 It will have 3 parts, the HOOK, BODY, and OUTRO, each section marked by tags.
 The HOOK is the opening line to grab attention. The BODY is a cohesive paragraph. The OUTRO is a closing statement or a question or call to action.
 Format the final script as such:
-<HOOK> {HOOK} </HOOK>
-<BODY> {BODY} </BODY>
-<OUTRO> {OUTRO} </OUTRO>"""
-
-
+<HOOK>{YOUR HOOK}</HOOK>
+<BODY>{YOUR BODY}</BODY>
+<OUTRO>{YOUR OUTRO}</OUTRO>"""
 
 def is_valid_script(text):
     return "<HOOK>" in text and "<BODY>" in text and "<OUTRO>" in text and "</HOOK>" in text and "</BODY>" in text and "</OUTRO>" in text

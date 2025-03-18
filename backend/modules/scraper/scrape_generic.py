@@ -8,7 +8,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import os
 
-def scrape_generic(driver, url):
+DRIVER_PATH = os.getenv("DRIVER_PATH")
+DRIVER = Service(executable_path="/snap/bin/firefox.geckodriver")
+firefox_options = Options()
+
+user_agents = ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"]
+firefox_options.add_argument(f"user-agent={user_agents[0]}")
+firefox_options.add_argument("--headless")
+
+driver = webdriver.Firefox(service=DRIVER, options=firefox_options)
+driver.maximize_window()
+
+def scrape_generic(url):
     driver.get(url)
 
     # Wait for the page to load
@@ -80,17 +91,6 @@ def scrape_generic(driver, url):
         
 
 if __name__ == "__main__":
-    DRIVER_PATH = os.getenv("DRIVER_PATH")
-    DRIVER = Service(executable_path=DRIVER_PATH)
-    firefox_options = Options()
-
-    user_agents = ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"]
-    firefox_options.add_argument(f"user-agent={user_agents[0]}")
-    firefox_options.add_argument("--headless")
-
-    driver = webdriver.Firefox(service=DRIVER, options=firefox_options)
-    driver.maximize_window()
-
     test_articles = {
         "bbc": "https://www.bbc.com/news/articles/c9wpq0g10xjo",
         "ap": "https://apnews.com/article/trump-venezuela-el-salvador-immigration-dd4f61999f85c4dd8bcaba7d4fc7c9af",
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     TEST_URL = test_articles.get("npr")
     print(f"Fetching URL {TEST_URL}")
 
-    title, content = scrape_generic(driver, TEST_URL)
+    title, content = scrape_generic(TEST_URL)
     print(f"Retrieved Article {title}")
 
     # Write to file in tests/

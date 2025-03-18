@@ -11,9 +11,10 @@ speaker = PiperSpeaker(
 def generate_audio_file(text, name, directory):
     Path(directory).mkdir(parents=True, exist_ok=True)
     
-    speaker.text_to_wave(text, f"{directory}/{name}.wav")
+    file_path = os.path.join(directory, f"{name}.wav")
+    speaker.text_to_wave(text, file_path)
 
-    return f"{directory}/{name}.wav"
+    return file_path
 
 def generate_audio_from_script(script, name, directory):
     hook = get_within_tags("HOOK", script)
