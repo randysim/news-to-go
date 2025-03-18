@@ -39,4 +39,3 @@ The People's Defence Force (PDF) has targeted civilians involved in election pre
 <OUTRO>Who will be next in line to lead Myanmar? Will the junta hold until the end, or will democracy prevail? The fate of this small nation, and its people, hangs in the balance. What do you think? Lets discuss in the comments below.</OUTRO>"""
 
     audio_files = generate_audio_from_script(TEST_SCRIPT, "test_script_53242", "audio")
-    
