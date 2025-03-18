@@ -37,9 +37,14 @@ def clean_bullet_points(text):
     return cleaned_text.strip()
 
 def clean_characters(text):
-    blacklisted = ["“", "”", "’", "‘", "…", "\n\n", "\t", "*"]
+    blacklisted = ["“", "”", "’", "‘", "…", "\t", "*"]
     for char in blacklisted:
         text = text.replace(char, "")
+    return text
+
+def clean_double_newlines(text):
+    while "\n\n" in text:
+        text = text.replace("\n\n", "\n")
     return text
 
 def clean_em_dashes(text):
@@ -123,6 +128,7 @@ def generate_script(news_content):
     dirty_summary = clean_non_ascii(dirty_summary)
     dirty_summary = clean_em_dashes(dirty_summary)
     dirty_summary = clean_colons(dirty_summary)
+    dirty_summary = clean_double_newlines(dirty_summary)
 
     article_summary = clean_main_quotes(clean_double_space(dirty_summary))
 
@@ -166,6 +172,7 @@ def generate_script(news_content):
     script = clean_em_dashes(script)
     script = clean_non_ascii(script)
     script = clean_double_space(script)
+    script = clean_double_newlines(script)
     
     HOOK = clean_main_quotes(clean_html_tags(get_within_tags("HOOK", script)))
     BODY = clean_main_quotes(clean_html_tags(get_within_tags("BODY", script)))

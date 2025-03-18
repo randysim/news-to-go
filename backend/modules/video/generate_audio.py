@@ -8,6 +8,8 @@ from scipy.io.wavfile import write as write_wav
 
 preload_models()
 
+
+
 def generate_audio_file(text, name, directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
