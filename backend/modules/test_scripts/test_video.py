@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from ..video.generate_images import search_media
+from ..video.generate_images import search_media, download_media
 
 if __name__ == "__main__":
     load_dotenv()
@@ -16,4 +16,5 @@ The People's Defence Force (PDF) has targeted civilians involved in election pre
 
     test_keywords = [['military', 'government'], ['civilian', 'demand'], ['regional', 'voter'], ['military', 'collapse'], ['junta', 'and'], ['image', 'enhancement']]
 
-    print(search_media(test_keywords[0]))
+    media_url = search_media(test_keywords[0])
+    download_media(media_url, "resource/media")

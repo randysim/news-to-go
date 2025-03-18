@@ -1,6 +1,8 @@
 import re
 import os
 import requests
+from urllib.parse import urlparse
+from pathlib import Path
 from ollama import Client
 from .clean import get_within_tags, clean_think, clean_double_newlines, clean_double_space, clean_main_quotes, clean_non_ascii, clean_colons, clean_html_tags
 
@@ -149,7 +151,48 @@ def search_media(keyword, nth=0):
     # Step 5: Return a default image if all searches fail
     return 'https://images.pexels.com/photos/281260/pexels-photo-281260.jpeg'
 
-
+def download_media(url, directory=None):
+    # Create the directory if it doesn't exist
+    if directory:
+        Path(directory).mkdir(parents=True, exist_ok=True)
+    
+    # Send a GET request to the URL
+    response = requests.get(url, stream=True)
+    
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Extract filename from URL
+        parsed_url = urlparse(url)
+        filename = os.path.basename(parsed_url.path)
+        
+        # If filename is empty or doesn't have an extension, create a default one
+        if not filename or '.' not in filename:
+            # Try to get content type from headers
+            content_type = response.headers.get('Content-Type', '')
+            if 'video' in content_type:
+                filename = 'downloaded_video.mp4'
+            elif 'image' in content_type:
+                filename = 'downloaded_image.jpg'
+            else:
+                filename = 'downloaded_media'
+        
+        # Create the full path
+        if directory:
+            full_path = os.path.join(directory, filename)
+        else:
+            full_path = filename
+        
+        # Write the content to a file in binary mode
+        with open(full_path, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    file.write(chunk)
+        
+        print(f"Downloaded {full_path} successfully.")
+        return full_path
+    else:
+        print(f"Failed to download media. Status code: {response.status_code}")
+        return None
 
 
 if __name__ == "__main__":

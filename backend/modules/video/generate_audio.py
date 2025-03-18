@@ -1,6 +1,7 @@
 import os
 from .clean import get_within_tags
 from yapper import Yapper, PiperSpeaker, PiperVoiceUK
+from pathlib import Path
 
 vanilla_yapper = Yapper()
 speaker = PiperSpeaker(
@@ -8,8 +9,7 @@ speaker = PiperSpeaker(
 )
 
 def generate_audio_file(text, name, directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    Path(directory).mkdir(parents=True, exist_ok=True)
     
     speaker.text_to_wave(text, f"{directory}/{name}.wav")
 
@@ -31,4 +31,7 @@ Civilians increasingly demand democratic accountability amid ongoing civil war. 
 The People's Defence Force (PDF) has targeted civilians involved in election preparations, arresting teachers and others in southern regions, creating a climate of fear. Some observers, like Zaw Kyaw from the National Union of Goldberg and Assistance League, believe the military will eventually collapse due to low morale regardless of election outcomes.</BODY>
 <OUTRO>Who will be next in line to lead Myanmar? Will the junta hold until the end, or will democracy prevail? The fate of this small nation, and its people, hangs in the balance. What do you think? Lets discuss in the comments below.</OUTRO>"""
 
-    audio_files = generate_audio_from_script(TEST_SCRIPT, "test_script_53242", "audio")
+    if not os.path.exists("resource"):
+        os.makedirs("resource")
+
+    audio_files = generate_audio_from_script(TEST_SCRIPT, "test_script_53242", "resource/audio")

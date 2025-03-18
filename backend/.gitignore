@@ -1,7 +1,9 @@
 # generated folders
 tests/
-audio/
-captions/
+resource/
+# audio/
+# captions/
+# media/
 
 # Firefox Web Driver
 geckodriver
