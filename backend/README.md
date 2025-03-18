@@ -18,3 +18,7 @@ Open windows powershell
 This will allow WSL to access the OLLAMA api. Make sure to replace localhost with your windows computers IPv4
 
 Address as WSL and windows have two different network configurations.
+
+## Run individual scripts as test
+
+``python -m modules.folder.script_name`` without the .py

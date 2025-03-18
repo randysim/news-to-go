@@ -1,18 +1,11 @@
 import os
+from .clean import get_within_tags
 from yapper import Yapper, PiperSpeaker, PiperVoiceUK
 
 vanilla_yapper = Yapper()
 speaker = PiperSpeaker(
     voice=PiperVoiceUK.SOUTHERN_ENGLISH_FEMALE
 )
-
-
-def get_within_tags(tag, text):
-    start_tag = f"<{tag}>"
-    end_tag = f"</{tag}>"
-    start_index = text.find(start_tag)
-    end_index = text.find(end_tag)
-    return text[start_index + len(start_tag):end_index].strip()
 
 def generate_audio_file(text, name, directory):
     if not os.path.exists(directory):

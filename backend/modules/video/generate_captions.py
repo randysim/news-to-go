@@ -1,14 +1,9 @@
 import whisper
 import os
 
-model = whisper.load_model("medium")
+from .clean import get_within_tags
 
-def get_within_tags(tag, text):
-    start_tag = f"<{tag}>"
-    end_tag = f"</{tag}>"
-    start_index = text.find(start_tag)
-    end_index = text.find(end_tag)
-    return text[start_index + len(start_tag):end_index].strip()
+model = whisper.load_model("medium")
 
 def generate_captions(audio_file):
     result = model.transcribe(audio_file, word_timestamps=True)
