@@ -184,7 +184,8 @@ def save_config(title, audio_file_path, keywords, captions, sentence_starts, fil
         "sentence_starts": sentence_starts,
         "filename": filename,
         "directory": directory,
-        "every_n_sentences": every_n_sentences
+        "every_n_sentences": every_n_sentences,
+        "keyword_image_overrides": keyword_image_overrides
     }
 
     Path(save_dir).mkdir(parents=True, exist_ok=True)
