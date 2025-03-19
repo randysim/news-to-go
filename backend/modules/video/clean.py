@@ -17,7 +17,7 @@ def clean_bullet_points(text):
     return cleaned_text.strip()
 
 def clean_characters(text):
-    blacklisted = ["“", "”", "’", "‘", "…", "\t", "*"]
+    blacklisted = ["“", "”", "’", "‘", "…", "\t", "*", "{", "}"]
     for char in blacklisted:
         text = text.replace(char, "")
     return text

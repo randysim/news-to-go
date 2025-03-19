@@ -5,12 +5,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 from ollama import Client
 from .clean import get_within_tags, clean_think, clean_double_newlines, clean_double_space, clean_main_quotes, clean_non_ascii, clean_colons, clean_html_tags
-
-client = Client(
-    host=f"http://{os.getenv('OLLAMA_IP')}:11434"
-)
-
-MODEL = os.getenv("OLLAMA_MODEL")
+from datetime import datetime
 
 KEYWORD_MESSAGE = """You are a specialized keyword generator for image searches. When given text, generate ONE highly specific two-word keyword phrase that precisely captures the unique technical context of the provided content.
 
@@ -22,7 +17,7 @@ Your keyword should be:
 - Useful for finding relevant technical images
 - Focused on distinctive elements rather than generic concepts
 
-Format your response as: <KEYWORD>{your two-word keyword}</KEYWORD>
+Format your response exactly as follows: <KEYWORD>{your two-word keyword}</KEYWORD>
 """
 
 def generate_fragments(script, image_every=2):
@@ -54,9 +49,18 @@ def clean_keyword(text):
     return cleaned_keyword
 
 def is_valid_keyword(text):
-    return "<KEYWORD>" in text and "</KEYWORD>" in text
+    if "<KEYWORD>" in text and "</KEYWORD>" in text:
+        kw = clean_keyword(text)
+        return len(kw.split(" ")) >= 2
+    return False
 
 def generate_keyword(text):
+    client = Client(
+        host=f"http://{os.getenv('OLLAMA_IP')}:11434"
+    )
+
+    MODEL = os.getenv("OLLAMA_MODEL")
+
     response = client.chat(
         model=MODEL,
         messages=[
@@ -72,30 +76,40 @@ def generate_keyword(text):
     )
 
     while not is_valid_keyword(response["message"]["content"]):
+        print("Invalid keyword. Trying again...")
+
+        now = datetime.now()
+        formatted_date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
+        error_file = os.path.join(os.getenv("ERROR_DIRECTORY"), f"KEYWORD_ERROR_{formatted_date_str}.txt")
+        with open(error_file, "w") as f:
+            f.write(response["message"]["content"])
+
         response = client.chat(
-        model=MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": KEYWORD_MESSAGE
-            },
-            {
-                "role": "user",
-                "content": f"Generate a word or phrase that best describes the following text:\n{text}"
-            }
-        ]
-    )
-        
+            model=MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": KEYWORD_MESSAGE
+                },
+                {
+                    "role": "user",
+                    "content": f"Generate a word or phrase that best describes the following text:\n{text}"
+                }
+            ]
+        )
+
     keyword = clean_keyword(response["message"]["content"]).split(" ")
-    
+
     return [keyword[0].lower(), keyword[1].lower()]
 
 def generate_keywords(script, every_n_sentences=2):
     fragments = generate_fragments(script, image_every=every_n_sentences)
 
     keywords = []
-
+    cur = 0
     for fragment in fragments:
+        cur += 1
+        print(f"Generating keyword {cur}/{len(fragments)}...")
         keywords.append(generate_keyword(fragment))
     
     return keywords
@@ -123,7 +137,7 @@ def search_media(keyword, nth=0):
             if video_files:
                 # Sort by height (resolution) in descending order and get the first one
                 video_files.sort(key=lambda x: x.get('height', 0), reverse=True)
-                return video_files[0]['link']
+                return video_files[0]['link'], "video"
 
     # Step 2: Search for a video with the first keyword only
     response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': nth+1})
@@ -133,21 +147,21 @@ def search_media(keyword, nth=0):
             video_files = data['videos'][nth]['video_files']
             if video_files:
                 video_files.sort(key=lambda x: x.get('height', 0), reverse=True)
-                return video_files[0]['link']
+                return video_files[0]['link'], "video"
 
     # Step 3: Search for an image with combined keywords
     response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': nth+1})
     if response.status_code == 200:
         data = response.json()
         if data.get('photos') and len(data['photos']) > nth:
-            return data['photos'][nth]['src']['original']
+            return data['photos'][nth]['src']['original'], "image"
 
     # Step 4: Search for an image with the first keyword only
     response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': nth+1})
     if response.status_code == 200:
         data = response.json()
         if data.get('photos') and len(data['photos']) > nth:
-            return data['photos'][nth]['src']['original']
+            return data['photos'][nth]['src']['original'], "image"
 
     # Step 5: Return a default image if all searches fail
     return 'https://images.pexels.com/photos/281260/pexels-photo-281260.jpeg'

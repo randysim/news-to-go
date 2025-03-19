@@ -1,18 +1,14 @@
 from ollama import Client
 from .clean import clean_think, clean_bullet_points, clean_characters, clean_double_newlines, clean_em_dashes, clean_double_space, clean_colons, get_within_tags, clean_html_tags, clean_non_ascii, clean_main_quotes
 import os
+from datetime import datetime
 
-client = Client(
-    host=f"http://{os.getenv('OLLAMA_IP')}:11434"
-)
-
-MODEL = os.getenv("OLLAMA_MODEL")
 SUMMARY_SYSTEM_MESSAGE = """You are a helpful summarizer. You will be given text to summarize into a paragraph. Write in complete english sentences and avoid referencing the text itself (e.g. phrases like "the text states" or "the text mentions")."""
 
 SCRIPT_SYSTEM_MESSAGE = """You are a video script writer. You will be given a paragraph summary of a topic. You must turn the summary into a script in english for a video.
 It will have 3 parts, the HOOK, BODY, and OUTRO, each section marked by tags.
 The HOOK is the opening line to grab attention. The BODY is a cohesive paragraph. The OUTRO is a closing statement or a question or call to action.
-Format the final script as such:
+Format the final script as exactly as follows:
 <HOOK>{YOUR HOOK}</HOOK>
 <BODY>{YOUR BODY}</BODY>
 <OUTRO>{YOUR OUTRO}</OUTRO>"""
@@ -24,6 +20,12 @@ def is_play_script(text):
     return "[" in text and "]" in text
 
 def generate_script(news_content):
+    client = Client(
+        host=f"http://{os.getenv('OLLAMA_IP')}:11434"
+    )
+
+    MODEL = os.getenv("OLLAMA_MODEL")
+
     response = client.chat(
         model=MODEL,
         messages=[
@@ -71,6 +73,13 @@ def generate_script(news_content):
     script = response['message']['content']
     while not is_valid_script(script) or is_play_script(script):
         print("Regenerating invalid script...")
+        now = datetime.now()
+        formatted_date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
+        error_file = os.path.join(os.getenv("ERROR_DIRECTORY"), f"SCRIPT_ERROR_{formatted_date_str}.txt")
+        with open(error_file, "w") as f:
+            f.write(script)
+        print(f"Error script saved to {error_file}")
+        
         response = client.chat(
             model=MODEL,
             messages=[
@@ -104,12 +113,10 @@ def generate_script(news_content):
 
     return article_summary, script, default_summary, default_script
 
-def generate_script_file(news_content, script_name, directory):
-    summary, script, default_summary, default_script = generate_script(news_content)
-    with open(f"{directory}/{script_name}.txt", "w") as f:
+def generate_script_file(script_name, directory, summary, script):
+    script_path = os.path.join(directory, f"{script_name}.txt")
+    with open(script_path, "w") as f:
         f.write(f"SUMMARY:\n{summary}\n\nSCRIPT:\n{script}")
-    with open(f"{directory}/default_{script_name}.txt", "w") as f:
-        f.write(f"SUMMARY:\n{default_summary}\n\nSCRIPT:\n{default_script}")
 
 if __name__ == "__main__":
     print("Attempting to generate scripts...")

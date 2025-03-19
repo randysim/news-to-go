@@ -6,91 +6,99 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from contextlib import contextmanager
 import os
 
-driver = None
+@contextmanager
+def get_driver():
+    DRIVER_PATH = os.getenv("DRIVER_PATH")
+    DRIVER = Service(executable_path=DRIVER_PATH)
+    firefox_options = Options()
+
+    user_agents = ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"]
+    firefox_options.add_argument(f"user-agent={user_agents[0]}")
+    firefox_options.add_argument("--headless")
+
+    driver = webdriver.Firefox(service=DRIVER, options=firefox_options)
+    driver.maximize_window()
+
+    try:
+        yield driver
+    finally:
+        driver.quit()
 
 def scrape_generic(url):
-    if not driver:
-        DRIVER_PATH = os.getenv("DRIVER_PATH")
-        DRIVER = Service(executable_path=DRIVER_PATH)
-        firefox_options = Options()
-
-        user_agents = ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"]
-        firefox_options.add_argument(f"user-agent={user_agents[0]}")
-        firefox_options.add_argument("--headless")
-
-        driver = webdriver.Firefox(service=DRIVER, options=firefox_options)
+    with get_driver() as driver:
         driver.maximize_window()
 
-    driver.get(url)
+        driver.get(url)
 
-    # Wait for the page to load
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.TAG_NAME, "p"))
-    )
+        # Wait for the page to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "p"))
+        )
 
-    # Get title
-    title = driver.title
+        # Get title
+        title = driver.title
 
-    # get parent element
-    """
-    paragraph_elements = driver.find_elements(By.TAG_NAME, "p")
-    initial_paragraph = paragraph_elements[len(paragraph_elements) // 2] # get the middle paragraph
-    parent_element = initial_paragraph.find_element(By.XPATH, "./../..")
-    parent_html = parent_element.get_attribute("outerHTML")"
-    """
-    parent_html = driver.page_source
-    
-    # parse article
-    soup = BeautifulSoup(parent_html, "html.parser")
-    tags = soup.find_all(["p", "ul"])
+        # get parent element
+        """
+        paragraph_elements = driver.find_elements(By.TAG_NAME, "p")
+        initial_paragraph = paragraph_elements[len(paragraph_elements) // 2] # get the middle paragraph
+        parent_element = initial_paragraph.find_element(By.XPATH, "./../..")
+        parent_html = parent_element.get_attribute("outerHTML")"
+        """
+        parent_html = driver.page_source
+        
+        # parse article
+        soup = BeautifulSoup(parent_html, "html.parser")
+        tags = soup.find_all(["p", "ul"])
 
-    article_content = ""
-    for tag in tags:
-        if tag.name == "p":
-            p_content = tag.text.strip()
+        article_content = ""
+        for tag in tags:
+            if tag.name == "p":
+                p_content = tag.text.strip()
 
-            # AP News Filters
-            if p_content.startswith("▶"):
-                continue
-
-            # Copyright filters
-            copyright_string = f"Copyright {datetime.today().year}"
-            if copyright_string in p_content:
-                continue
-            
-            if p_content:
-                article_content += p_content + "\n"
-        elif tag.name == "ul":
-            for li in tag.find_all("li"):
-                # if li contains a <a>, skip
-                has_only_text = all(isinstance(content, NavigableString) for content in li.contents)
-    
-                if not has_only_text:
+                # AP News Filters
+                if p_content.startswith("▶"):
                     continue
 
-                list_item_content = li.text.strip()
-                if list_item_content:
-                    article_content += "- " + li.text.strip() + "\n"
-    
-    # replace odd characters
-    character_replacements = {
-        "“": "\"",
-        "”": "\"",
-        "’": "'",
-        "‘": "'",
-        "—": ", ",
-        "…": "...",
-        "\n\n": "\n",
-        "\t": "",
-        "  ": ""
-    }
+                # Copyright filters
+                copyright_string = f"Copyright {datetime.today().year}"
+                if copyright_string in p_content:
+                    continue
+                
+                if p_content:
+                    article_content += p_content + "\n"
+            elif tag.name == "ul":
+                for li in tag.find_all("li"):
+                    # if li contains a <a>, skip
+                    has_only_text = all(isinstance(content, NavigableString) for content in li.contents)
+        
+                    if not has_only_text:
+                        continue
 
-    for key, value in character_replacements.items():
-        article_content = article_content.replace(key, value)
-    
-    return title, article_content
+                    list_item_content = li.text.strip()
+                    if list_item_content:
+                        article_content += "- " + li.text.strip() + "\n"
+        
+        # replace odd characters
+        character_replacements = {
+            "“": "\"",
+            "”": "\"",
+            "’": "'",
+            "‘": "'",
+            "—": ", ",
+            "…": "...",
+            "\n\n": "\n",
+            "\t": "",
+            "  ": ""
+        }
+
+        for key, value in character_replacements.items():
+            article_content = article_content.replace(key, value)
+        
+        return title, article_content
         
 
 if __name__ == "__main__":
