@@ -77,3 +77,35 @@ def clean_main_quotes(text):
 
 def clean_percent(text):
     return text.replace("%", " percent")
+
+def clean_titles(text):
+    """
+    Removes periods from common titles like Mr., Ms., Dr., etc.
+    
+    Args:
+        text (str): The input text to clean
+        
+    Returns:
+        str: Text with periods removed from common titles
+    """
+    # List of common titles with periods
+    titles_with_periods = [
+        "Mr.", "Ms.", "Mrs.", "Dr.", "Prof.", "Rev.", "Hon.", 
+        "Capt.", "Lt.", "Sgt.", "Col.", "Gen.", "Cmdr.", "Gov."
+    ]
+    
+    # List of same titles without periods
+    titles_without_periods = [
+        "Mr", "Ms", "Mrs", "Dr", "Prof", "Rev", "Hon", 
+        "Capt", "Lt", "Sgt", "Col", "Gen", "Cmdr", "Gov"
+    ]
+    
+    # Create a dictionary for replacement
+    replacement_dict = dict(zip(titles_with_periods, titles_without_periods))
+    
+    # Replace each title
+    for title_with_period, title_without_period in replacement_dict.items():
+        # Use word boundaries to ensure we only match complete titles
+        text = text.replace(title_with_period + " ", title_without_period + " ")
+    
+    return text

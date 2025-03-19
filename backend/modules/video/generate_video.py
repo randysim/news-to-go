@@ -31,7 +31,7 @@ def get_sentence_starts(script, captions):
         if current_word == 0:
             current_start = caption[1]
 
-        current_word += 1
+        current_word += len(caption[0].split(" "))
 
         if current_word >= current_sentence_length:
             current_end = caption[2]
@@ -58,7 +58,7 @@ def get_sentence_starts(script, captions):
     
     return sentence_starts
 
-def gather_video_resources(title, news_content, directory=None):
+def gather_video_resources(title, news_content, should_generate_keywords=True, directory=None):
     if directory:
         Path(directory).mkdir(parents=True, exist_ok=True)
 
@@ -86,7 +86,7 @@ def gather_video_resources(title, news_content, directory=None):
     every_n_sentences = 1
     print(f"Generating images for {title}...")
     print(f"Generating keywords...")
-    keywords = generate_keywords(script, every_n_sentences)
+    keywords = generate_keywords(script, every_n_sentences, empty=not should_generate_keywords)
     
     keyword_image_overrides = {}
     for i in range(len(keywords)):

@@ -102,15 +102,21 @@ def generate_keyword(text):
 
     return [keyword[0].lower(), keyword[1].lower()]
 
-def generate_keywords(script, every_n_sentences=2):
+def generate_keywords(script, every_n_sentences=2, empty=False):
     fragments = generate_fragments(script, image_every=every_n_sentences)
 
     keywords = []
     cur = 0
     for fragment in fragments:
+        keyword = ""
+        if not empty:
+            keyword = generate_keyword(fragment)
+        else:
+            keyword = ["", ""]
+
         keywords.append({
             "fragment": fragment,
-            "keyword": generate_keyword(fragment),
+            "keyword": keyword,
             "idx": str(cur)
         })
         cur += 1
@@ -124,7 +130,7 @@ def search_media(keyword, urls_used):
     IMAGE_SEARCH_URL = 'https://api.pexels.com/v1/search'
 
     # Combine keywords for the search
-    combined_keywords = ' '.join(keyword)
+    combined_keywords = (' '.join(keyword)).strip().lower()
 
     # Headers for the API request
     headers = {
@@ -132,7 +138,7 @@ def search_media(keyword, urls_used):
     }
 
     # Step 1: Search for a video with combined keywords
-    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': 10})
+    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': 12})
     if response.status_code == 200:
         data = response.json()
         if data.get('videos'):
@@ -151,7 +157,7 @@ def search_media(keyword, urls_used):
                             return video_url, "video"
 
     # Step 2: Search for a video with the first keyword only
-    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': 10})
+    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': 12})
     if response.status_code == 200:
         data = response.json()
         if data.get('videos'):
