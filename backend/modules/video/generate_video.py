@@ -83,7 +83,7 @@ def gather_video_resources(title, news_content, directory=None):
     # to get the end of the first clip, it is the start of the clip index + every_n_sentences and if not then just to the end of the video
     sentence_starts = get_sentence_starts(script, captions)
 
-    every_n_sentences = 2
+    every_n_sentences = 1
     print(f"Generating images for {title}...")
     print(f"Generating keywords...")
     keywords = generate_keywords(script, every_n_sentences)
@@ -94,18 +94,45 @@ def gather_video_resources(title, news_content, directory=None):
 
     return title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides
 
-def create_subtitle_clips(captions, videosize):
+def create_subtitles(captions, videosize):
     subtitle_clips = []
+    # margin_fx = vfx.Margin(bottom=30)
 
     for caption in captions:
         word, start_time, end_time = caption
         duration = end_time - start_time
 
         text_clip = TextClip(font="fonts/Roboto.ttf", text=word, font_size=80, color='white', stroke_color='black', stroke_width=4, size=videosize, method="caption", horizontal_align="center", vertical_align="bottom")
+        # text_clip = margin_fx.copy().apply(text_clip)
         text_clip = text_clip.with_start(start_time).with_duration(duration)
         subtitle_clips.append(text_clip)
 
-    return subtitle_clips
+    subtitles = CompositeVideoClip(subtitle_clips)
+
+    return subtitles
+
+def resize_and_crop(clip : VideoFileClip, target_size=(1920, 1080)):
+    w, h = clip.size
+    target_w, target_h = target_size
+
+    scale_w = target_w / w
+    scale_h = target_h / h
+
+    scale = max(scale_w, scale_h)
+    resized_clip = clip.resized((int(w * scale), int(h * scale)))
+    new_w, new_h = resized_clip.size
+
+    x_center = new_w / 2
+    y_center = new_h / 2
+
+    resized_clip = resized_clip.cropped(
+        x1=x_center - target_w / 2,
+        y1=y_center - target_h / 2,
+        x2=x_center + target_w / 2,
+        y2=y_center + target_h / 2
+    )
+
+    return resized_clip
 
 def construct_video(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides):
     urls_used = set()
@@ -138,46 +165,87 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     voice_over = AudioFileClip(audio_file_path)
     total_duration = voice_over.duration # measured in seconds
     
-    b_roll = []
+    temp_files = []
 
     # Create the B-roll
-    for media in medias:
-        media_path = media["path"]
-        sentence_num = media.get("sentence")
-        start = sentence_starts[str(sentence_num)]["start"]
-        end = sentence_starts[str(sentence_num + every_n_sentences)]["start"] if str(sentence_num + every_n_sentences) in sentence_starts else total_duration
-        duration = end - start if end > 0 else total_duration - start
+    temp_folder = os.path.join(directory, "temp")
+    print(f"Generating broll in {temp_folder}")
+    Path(temp_folder).mkdir(parents=True, exist_ok=True)
+    batch_size = 5
+    for i in range(0, len(medias), batch_size):
+        batch = medias[i:i+batch_size]
+        batch_clips = []
+        for media in batch:
+            media_path = media["path"]
+            sentence_num = media.get("sentence")
+            start = sentence_starts[str(sentence_num)]["start"]
+            end = sentence_starts[str(sentence_num + every_n_sentences)]["start"] if str(sentence_num + every_n_sentences) in sentence_starts else total_duration
+            duration = end - start if end > 0 else total_duration - start
 
-        if media["type"] == "image":
-            media_clip = ImageClip(media_path).set_duration(duration)
-        else:
-            media_clip = VideoFileClip(media_path)
-            media_clip.with_volume_scaled(0)
+            if media["type"] == "image":
+                media_clip = ImageClip(media_path).set_duration(duration)
+            else:
+                media_clip = VideoFileClip(media_path)
+                media_clip = media_clip.without_audio()
+                
+                if media_clip.duration > duration:
+                    media_clip = media_clip.subclipped(0, duration)
+                elif media_clip.duration < duration:
+                    loop_effect = vfx.Loop(duration=duration)
+                    media_clip = loop_effect.copy().apply(media_clip)
             
-            if media_clip.duration > duration:
-                media_clip = media_clip.subclipped(0, duration)
-            elif media_clip.duration < duration:
-                loop_effect = vfx.Loop(duration=duration)
-                media_clip = loop_effect.copy().apply(media_clip)
+            mw, mh = media_clip.size
+            if mw != 1920 or mh != 1080:
+                media_clip = resize_and_crop(media_clip, (1920, 1080))
+            
+            batch_clips.append(media_clip)
         
-        mw, mh = media_clip.size
-        if mh < 1080:
-            scale_factor = 1080 / mh
-            media_clip = media_clip.resized((min(int(mw * scale_factor), 1920), 1080))
+        print(f"Rendering batch {i//5 + 1}/{(len(medias) + batch_size - 1) // batch_size} for {title}")
+        batch_video = concatenate_videoclips(batch_clips)
+        temp_file = os.path.join(directory, "temp", f"{filename}_{i}.mp4")
+        batch_video.write_videofile(temp_file, fps=30)
+        temp_files.append(temp_file)
 
-        b_roll.append(media_clip)
-    
-    video = concatenate_videoclips(b_roll, method="compose")
-    video = video.with_audio(voice_over)
+        # CLOSE TO FREE RESOURCES
+        for clip in batch_clips:
+            clip.close()
+        batch_video.close()
+
+    bg_music = AudioFileClip("music/news_music.mp3")
+    bg_music = bg_music.subclipped(0, total_duration)
+    bg_music = bg_music.with_volume_scaled(0.05)
+
+    bg_audio = CompositeAudioClip([bg_music, voice_over])
+    print("Finished generating background audio. Generating captions...")
 
     # Create the captions
-    subtitle_clips = create_subtitle_clips(captions, video.size)
+    subtitles = create_subtitles(captions, (1920, 1080))
+    print("Finished generating subtitles")
 
-    final_video = CompositeVideoClip([video] + subtitle_clips)
+    video_clips = [VideoFileClip(clip) for clip in temp_files]
+    video = concatenate_videoclips(video_clips)
+    final_video = CompositeVideoClip([video, subtitles])
+    final_video = final_video.with_audio(bg_audio)
+
+    print("Finished compositing video. Writing...")
 
     # write the video
     Path(os.path.join(directory, "video_output")).mkdir(parents=True, exist_ok=True)
-    final_video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"))
+    final_video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"), fps=30)
+
+    for video_clip in video_clips:
+        video_clip.close()
+
+    final_video.close()
+    bg_music.close()
+    voice_over.close()
+
+    # Delete temp files
+    print("Deleting temp files...")
+    for temp_file in temp_files:
+        os.remove(temp_file)
+    
+    print("Done generating video!")
 
 def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides, save_dir):
     resources = {

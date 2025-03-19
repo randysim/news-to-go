@@ -3,6 +3,8 @@ tests/
 resource/
 fonts/*
 !fonts/.gitkeep
+music/*
+!music/.gitkeep
 # audio/
 # captions/
 # media/

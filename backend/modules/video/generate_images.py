@@ -15,7 +15,7 @@ Your keyword should be:
 - Exactly two words
 - Highly specific to the technical subject matter
 - Useful for finding relevant technical images
-- Focused on distinctive elements rather than generic concepts
+- Be tangible and concrete, not abstract ideas or actions
 
 Format your response exactly as follows: <KEYWORD>{your two-word keyword}</KEYWORD>
 """
