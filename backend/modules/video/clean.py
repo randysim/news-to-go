@@ -74,3 +74,6 @@ def clean_main_quotes(text):
     if text.endswith("\""):
         text = text[:-1]
     return text
+
+def clean_percent(text):
+    return text.replace("%", " percent")

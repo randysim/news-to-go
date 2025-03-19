@@ -1,5 +1,5 @@
 from ollama import Client
-from .clean import clean_think, clean_bullet_points, clean_characters, clean_double_newlines, clean_em_dashes, clean_double_space, clean_colons, get_within_tags, clean_html_tags, clean_non_ascii, clean_main_quotes
+from .clean import clean_think, clean_bullet_points, clean_characters, clean_double_newlines, clean_em_dashes, clean_double_space, clean_colons, get_within_tags, clean_html_tags, clean_non_ascii, clean_main_quotes, clean_percent
 import os
 from datetime import datetime
 
@@ -104,6 +104,7 @@ def generate_script(news_content):
     script = clean_non_ascii(script)
     script = clean_double_space(script)
     script = clean_double_newlines(script)
+    script = clean_percent(script)
     
     HOOK = clean_main_quotes(clean_html_tags(get_within_tags("HOOK", script)))
     BODY = clean_main_quotes(clean_html_tags(get_within_tags("BODY", script)))
