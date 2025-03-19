@@ -89,20 +89,44 @@ def gather_video_resources(title, news_content, directory=None):
     keywords = generate_keywords(script, every_n_sentences)
     
     print(f"Keywords: {keywords}")
+    keyword_image_overrides = {}
+    for i in range(len(keywords)):
+        keyword_image_overrides[str(i)] = { "type": "", "url": ""}
 
-    return title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences
+    return title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides
 
-def construct_video(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences):
+def create_subtitle_clips(captions, videosize):
+    subtitle_clips = []
+
+    for caption in captions:
+        word, start_time, end_time = caption
+        duration = end_time - start_time
+
+        text_clip = TextClip(word, fontsize=24, color='white', bg_color='black', size=videosize, method="caption", horizontal_align="center", vertical_align="bottom")
+        text_clip = text_clip.with_start(start_time).with_duration(duration)
+        subtitle_clips.append(text_clip)
+
+    return subtitle_clips
+
+def construct_video(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides):
     urls_used = set()
     medias = []
     current_sentence = 0
 
     print(f"Downloading media for {title}...")
 
-    for kw_data in keywords:
+    for i, kw_data in enumerate(keywords):
         keyword = kw_data["keyword"]
 
-        media_url, media_type = search_media(keyword, urls_used)
+        override = keyword_image_overrides.get(str(i))
+        media_url = ""
+        media_type = ""
+        if override and override.get("url"):
+            media_url = override["url"]
+            media_type = override["type"]
+        else:
+            media_url, media_type = search_media(keyword, urls_used)
+
         urls_used.add(media_url)
         media_path = download_media(media_url, os.path.join(directory, "media", filename))
 
@@ -143,12 +167,15 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     video = video.with_audio(voice_over)
 
     # Create the captions
+    subtitle_clips = create_subtitle_clips(captions, video.size)
+
+    final_video = CompositeVideoClip([video] + subtitle_clips)
 
     # write the video
     Path(os.path.join(directory, "video_output")).mkdir(parents=True, exist_ok=True)
-    video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"))
+    final_video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"))
 
-def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, save_dir):
+def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides, save_dir):
     resources = {
         "title": title,
         "audio_file_path": audio_file_path,
@@ -171,4 +198,4 @@ def load_config(path):
     with open(path, "r") as f:
         resources = json.load(f)
     
-    return resources["title"], resources["audio_file_path"], resources["keywords"], resources["captions"], resources["sentence_starts"], resources["filename"], resources["directory"], resources["every_n_sentences"]
+    return resources["title"], resources["audio_file_path"], resources["keywords"], resources["captions"], resources["sentence_starts"], resources["filename"], resources["directory"], resources["every_n_sentences"], resources["keyword_image_overrides"]
