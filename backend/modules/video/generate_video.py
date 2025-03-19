@@ -34,7 +34,8 @@ def get_sentence_starts(script, captions):
         current_word += 1
 
         if current_word >= current_sentence_length:
-            sentence_starts[current_sentence] = {
+            current_end = caption[2]
+            sentence_starts[str(current_sentence)] = {
                 "start": current_start,
                 "end": current_end,
                 "text": sentences[current_sentence]
@@ -47,8 +48,9 @@ def get_sentence_starts(script, captions):
 
             if current_sentence < len(sentences):
                 current_sentence_length = len(sentences[current_sentence].split(" "))
-    if current_word > 0:
-        sentence_starts[current_sentence] = {
+                
+    if current_sentence < len(sentences):
+        sentence_starts[str(current_sentence)] = {
             "start": current_start,
             "end": current_end, # THIS WILL BE -1 WHICH MEANS THE END OF THE VIDEO
             "text": sentences[current_sentence]
@@ -91,7 +93,7 @@ def gather_video_resources(title, news_content, directory=None):
     return title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences
 
 def construct_video(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences):
-    used_keywords = {}
+    urls_used = set()
     medias = []
     current_sentence = 0
 
@@ -99,11 +101,9 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
 
     for kw_data in keywords:
         keyword = kw_data["keyword"]
-        nth = max(used_keywords.get(keyword[0], 0), used_keywords.get(keyword[1], 0))
-        used_keywords[keyword[0]] = used_keywords.get(keyword[0], 0) + 1
-        used_keywords[keyword[1]] = used_keywords.get(keyword[1], 0) + 1
 
-        media_url, media_type = search_media(keyword, nth)
+        media_url, media_type = search_media(keyword, urls_used)
+        urls_used.add(media_url)
         media_path = download_media(media_url, os.path.join(directory, "media", filename))
 
         medias.append({ "path": media_path, "sentence": current_sentence, "type": media_type })
@@ -121,8 +121,8 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     for media in medias:
         media_path = media["path"]
         sentence_num = media.get("sentence")
-        start = sentence_starts[sentence_num]["start"]
-        end = sentence_starts[sentence_num + every_n_sentences]["start"] if sentence_num + every_n_sentences in sentence_starts else total_duration
+        start = sentence_starts[str(sentence_num)]["start"]
+        end = sentence_starts[str(sentence_num + every_n_sentences)]["start"] if sentence_num + every_n_sentences in sentence_starts else total_duration
         duration = end - start if end > 0 else total_duration - start
 
         if media["type"] == "image":
@@ -148,7 +148,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     Path(os.path.join(directory, "video_output")).mkdir(parents=True, exist_ok=True)
     video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"))
 
-def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences):
+def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, save_dir):
     resources = {
         "title": title,
         "audio_file_path": audio_file_path,
@@ -160,7 +160,8 @@ def save_config(title, audio_file_path, keywords, captions, sentence_starts, fil
         "every_n_sentences": every_n_sentences
     }
 
-    file_path = os.path.join(directory, f"{filename}_config.json")
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+    file_path = os.path.join(save_dir, f"{filename}_config.json")
     with open(file_path, "w") as f:
         f.write(json.dumps(resources))
     

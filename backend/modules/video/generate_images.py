@@ -113,11 +113,11 @@ def generate_keywords(script, every_n_sentences=2):
             "fragment": fragment,
             "keyword": generate_keyword(fragment)
         })
-        print(f"Generated keyword: {" ".join(keywords[-1])} -- {cur}/{len(fragments)}")
+        print(f"Generated keyword: {' '.join(keywords[-1].get('keyword'))} -- {cur}/{len(fragments)}")
     
     return keywords
 
-def search_media(keyword, nth=0):
+def search_media(keyword, urls_used):
     # Base URLs for Pexels API
     VIDEO_SEARCH_URL = 'https://api.pexels.com/videos/search'
     IMAGE_SEARCH_URL = 'https://api.pexels.com/v1/search'
@@ -131,43 +131,71 @@ def search_media(keyword, nth=0):
     }
 
     # Step 1: Search for a video with combined keywords
-    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': nth+1})
+    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': 10})
     if response.status_code == 200:
         data = response.json()
-        if data.get('videos') and len(data['videos']) > nth:
-            # Get the nth video and its highest quality file
-            video_files = data['videos'][nth]['video_files']
-            if video_files:
-                # Sort by height (resolution) in descending order and get the first one
-                video_files.sort(key=lambda x: x.get('height', 0), reverse=True)
-                return video_files[0]['link'], "video"
+        if data.get('videos'):
+            # Check each video until we find one not in urls_used
+            for video in data['videos']:
+                video_files = video['video_files']
+                if video_files:
+                    # Filter for files with height <= 1080
+                    hd_files = [f for f in video_files if f.get('height', 0) <= 1080]
+                    if hd_files:
+                        # Sort by height (resolution) in descending order and get the highest one under 1080p
+                        hd_files.sort(key=lambda x: x.get('height', 0), reverse=True)
+                        video_url = hd_files[0]['link']
+                        if video_url not in urls_used:
+                            urls_used.add(video_url)
+                            return video_url, "video"
 
     # Step 2: Search for a video with the first keyword only
-    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': nth+1})
+    response = requests.get(VIDEO_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': 10})
     if response.status_code == 200:
         data = response.json()
-        if data.get('videos') and len(data['videos']) > nth:
-            video_files = data['videos'][nth]['video_files']
-            if video_files:
-                video_files.sort(key=lambda x: x.get('height', 0), reverse=True)
-                return video_files[0]['link'], "video"
+        if data.get('videos'):
+            for video in data['videos']:
+                video_files = video['video_files']
+                if video_files:
+                    # Filter for files with height <= 1080
+                    hd_files = [f for f in video_files if f.get('height', 0) <= 1080]
+                    if hd_files:
+                        # Sort by height (resolution) in descending order
+                        hd_files.sort(key=lambda x: x.get('height', 0), reverse=True)
+                        video_url = hd_files[0]['link']
+                        if video_url not in urls_used:
+                            urls_used.add(video_url)
+                            return video_url, "video"
 
     # Step 3: Search for an image with combined keywords
-    response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': nth+1})
+    response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': combined_keywords, 'per_page': 10})
     if response.status_code == 200:
         data = response.json()
-        if data.get('photos') and len(data['photos']) > nth:
-            return data['photos'][nth]['src']['original'], "image"
+        if data.get('photos'):
+            for photo in data['photos']:
+                image_url = photo['src']['original']
+                if image_url not in urls_used:
+                    urls_used.add(image_url)
+                    return image_url, "image"
 
     # Step 4: Search for an image with the first keyword only
-    response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': nth+1})
+    response = requests.get(IMAGE_SEARCH_URL, headers=headers, params={'query': keyword[0], 'per_page': 10})
     if response.status_code == 200:
         data = response.json()
-        if data.get('photos') and len(data['photos']) > nth:
-            return data['photos'][nth]['src']['original'], "image"
+        if data.get('photos'):
+            for photo in data['photos']:
+                image_url = photo['src']['original']
+                if image_url not in urls_used:
+                    urls_used.add(image_url)
+                    return image_url, "image"
 
     # Step 5: Return a default image if all searches fail
-    return 'https://images.pexels.com/photos/281260/pexels-photo-281260.jpeg'
+    default_url = 'https://images.pexels.com/photos/281260/pexels-photo-281260.jpeg'
+    if default_url not in urls_used:
+        urls_used.add(default_url)
+    return default_url, "image"
+
+
 
 def download_media(url, directory=None):
     # Create the directory if it doesn't exist

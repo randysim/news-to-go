@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from ..video.generate_video import gather_video_resources, save_config
+from ..video.generate_video import gather_video_resources, save_config, construct_video
 from ..scraper.scrape_generic import scrape_generic
 import os
 
@@ -16,4 +16,5 @@ if __name__ == "__main__":
     resources = gather_video_resources(title, content, output_dir)
 
     # SAVE CONFIG
-    path = save_config(*resources)
+    path = save_config(*resources, save_dir=os.path.join(output_dir, "configs"))
+    print(f"Config saved to {path}")
