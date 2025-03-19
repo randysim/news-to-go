@@ -213,7 +213,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
 
     bg_music = AudioFileClip("music/news_music.mp3")
     bg_music = bg_music.subclipped(0, total_duration)
-    bg_music = bg_music.with_volume_scaled(0.05)
+    bg_music = bg_music.with_volume_scaled(0.03)
 
     bg_audio = CompositeAudioClip([bg_music, voice_over])
     print("Finished generating background audio. Generating captions...")
