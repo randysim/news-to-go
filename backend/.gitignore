@@ -1,6 +1,8 @@
 # generated folders
 tests/
 resource/
+fonts/*
+!fonts/.gitkeep
 # audio/
 # captions/
 # media/

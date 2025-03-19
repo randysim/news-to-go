@@ -31,3 +31,7 @@ OLLAMA_IP=<IP OF COMPUTER YOU ARE HOSTING OR LOCALHOST IF SAME COMPUTER>
 OLLAMA_MODEL=<OLLAMA LLM MODEL>
 ERROR_DIRECTORY=resource/error
 ```
+
+## font
+
+In the fonts folder, add fonts. Then, in generate_video.py, update the font moviepy uses for the captions
