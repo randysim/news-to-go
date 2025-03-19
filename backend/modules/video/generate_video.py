@@ -6,6 +6,7 @@ from .clean import clean_double_space, get_within_tags, clean_characters
 import re
 import os
 from pathlib import Path
+import json
 
 from moviepy import *
 
@@ -84,15 +85,20 @@ def gather_video_resources(title, news_content, directory=None):
     print(f"Generating images for {title}...")
     print(f"Generating keywords...")
     keywords = generate_keywords(script, every_n_sentences)
+    
+    print(f"Keywords: {keywords}")
+
+    return title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences
+
+def construct_video(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences):
     used_keywords = {}
     medias = []
     current_sentence = 0
 
-    print(f"Keywords: {keywords}")
-
     print(f"Downloading media for {title}...")
 
-    for keyword in keywords:
+    for kw_data in keywords:
+        keyword = kw_data["keyword"]
         nth = max(used_keywords.get(keyword[0], 0), used_keywords.get(keyword[1], 0))
         used_keywords[keyword[0]] = used_keywords.get(keyword[0], 0) + 1
         used_keywords[keyword[1]] = used_keywords.get(keyword[1], 0) + 1
@@ -105,18 +111,7 @@ def gather_video_resources(title, news_content, directory=None):
 
         current_sentence += every_n_sentences
     
-    """
-    HAVE:
-    - path to audio file (audio_file_path)
-    - path to media files (media) (and for what sentence they begin) <- could be image or video
-    - captions and their start and end times (captions)
-    - sentence starts and their start and end times (sentence_starts)
-    """
-
-    return audio_file_path, medias, captions, sentence_starts, filename, directory, every_n_sentences
-
-def construct_video(audio_file_path, medias, captions, sentence_starts, filename, directory, every_n_sentences):
-    print(f"Editing video for...")
+    print(f"Editing video for {title}...")
     voice_over = AudioFileClip(audio_file_path)
     total_duration = voice_over.duration # measured in seconds
     
@@ -152,3 +147,27 @@ def construct_video(audio_file_path, medias, captions, sentence_starts, filename
     # write the video
     Path(os.path.join(directory, "video_output")).mkdir(parents=True, exist_ok=True)
     video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"))
+
+def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences):
+    resources = {
+        "title": title,
+        "audio_file_path": audio_file_path,
+        "keywords": keywords,
+        "captions": captions,
+        "sentence_starts": sentence_starts,
+        "filename": filename,
+        "directory": directory,
+        "every_n_sentences": every_n_sentences
+    }
+
+    file_path = os.path.join(directory, f"{filename}_config.json")
+    with open(file_path, "w") as f:
+        f.write(json.dumps(resources))
+    
+    return file_path
+
+def load_config(path):
+    with open(path, "r") as f:
+        resources = json.load(f)
+    
+    return resources["title"], resources["audio_file_path"], resources["keywords"], resources["captions"], resources["sentence_starts"], resources["filename"], resources["directory"], resources["every_n_sentences"]

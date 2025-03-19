@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from ..video.generate_video import gather_video_resources, construct_video
+from ..video.generate_video import gather_video_resources, save_config
 from ..scraper.scrape_generic import scrape_generic
 import os
 
@@ -15,8 +15,5 @@ if __name__ == "__main__":
     title, content = scrape_generic(test_url)
     resources = gather_video_resources(title, content, output_dir)
 
-    # LOG RESOURCES
-    with open("tests/resources.txt", "w") as f:
-        f.write(str(resources))
-
-    construct_video(*resources)
+    # SAVE CONFIG
+    path = save_config(*resources)

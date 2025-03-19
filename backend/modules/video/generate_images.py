@@ -109,8 +109,11 @@ def generate_keywords(script, every_n_sentences=2):
     cur = 0
     for fragment in fragments:
         cur += 1
-        print(f"Generating keyword {cur}/{len(fragments)}...")
-        keywords.append(generate_keyword(fragment))
+        keywords.append({
+            "fragment": fragment,
+            "keyword": generate_keyword(fragment)
+        })
+        print(f"Generated keyword: {" ".join(keywords[-1])} -- {cur}/{len(fragments)}")
     
     return keywords
 
