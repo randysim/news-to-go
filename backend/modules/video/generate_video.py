@@ -48,7 +48,7 @@ def get_sentence_starts(script, captions):
 
             if current_sentence < len(sentences):
                 current_sentence_length = len(sentences[current_sentence].split(" "))
-                
+
     if current_sentence < len(sentences):
         sentence_starts[str(current_sentence)] = {
             "start": current_start,
@@ -122,7 +122,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
         media_path = media["path"]
         sentence_num = media.get("sentence")
         start = sentence_starts[str(sentence_num)]["start"]
-        end = sentence_starts[str(sentence_num + every_n_sentences)]["start"] if sentence_num + every_n_sentences in sentence_starts else total_duration
+        end = sentence_starts[str(sentence_num + every_n_sentences)]["start"] if str(sentence_num + every_n_sentences) in sentence_starts else total_duration
         duration = end - start if end > 0 else total_duration - start
 
         if media["type"] == "image":
