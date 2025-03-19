@@ -101,7 +101,7 @@ def create_subtitle_clips(captions, videosize):
         word, start_time, end_time = caption
         duration = end_time - start_time
 
-        text_clip = TextClip(font="fonts/Roboto.ttf", text=word, font_size=90, color='white', stroke_color='black', stroke_width=4, size=videosize, method="caption", horizontal_align="center", vertical_align="bottom")
+        text_clip = TextClip(font="fonts/Roboto.ttf", text=word, font_size=80, color='white', stroke_color='black', stroke_width=4, size=videosize, method="caption", horizontal_align="center", vertical_align="bottom")
         text_clip = text_clip.with_start(start_time).with_duration(duration)
         subtitle_clips.append(text_clip)
 
