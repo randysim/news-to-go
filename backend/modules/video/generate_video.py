@@ -101,7 +101,7 @@ def create_subtitle_clips(captions, videosize):
         word, start_time, end_time = caption
         duration = end_time - start_time
 
-        text_clip = TextClip(font="fonts/Roboto.ttf", text=word, font_size=24, color='white', stroke_color='black', stroke_width=4, size=videosize, method="caption", horizontal_align="center", vertical_align="bottom")
+        text_clip = TextClip(font="fonts/Roboto.ttf", text=word, font_size=80, color='white', stroke_color='black', stroke_width=4, size=videosize, method="caption", horizontal_align="center", vertical_align="bottom")
         text_clip = text_clip.with_start(start_time).with_duration(duration)
         subtitle_clips.append(text_clip)
 
@@ -159,6 +159,11 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
             elif media_clip.duration < duration:
                 loop_effect = vfx.Loop(duration=duration)
                 media_clip = loop_effect.copy().apply(media_clip)
+        
+        mw, mh = media_clip.size
+        if mh < 1080:
+            scale_factor = 1080 / mh
+            media_clip = media_clip.resized((min(int(mw * scale_factor), 1920), 1080))
 
         b_roll.append(media_clip)
     
