@@ -6,6 +6,7 @@
 - pip install -r requirements.txt
 - have ollama installed + ollama pull <model-name> (ex: deepseek-r1)
 - have ffmpeg installed (sudo apt install ffmpeg)
+- make sure .config folder exists in /home/user or else YapperTTS error
 - have firefox.geckodriver installed at /snap/bin/firefox.geckodriver (whereis firefox.geckodriver). Can install firefox snap on WSL using ``sudo snap install firefox``
 
 ## Windows + WSL
