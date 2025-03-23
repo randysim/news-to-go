@@ -40,3 +40,9 @@ ERROR_DIRECTORY=resource/error
 ## font
 
 In the fonts folder, add fonts. Then, in generate_video.py, update the font moviepy uses for the captions
+
+## music
+
+In the music folder, make sure to have background music. Then in generate_video.py, update the background music
+
+that moviepy uses.
