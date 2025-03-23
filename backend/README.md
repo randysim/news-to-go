@@ -5,6 +5,7 @@
 - python -m venv venv
 - pip install -r requirements.txt
 - have ollama installed + ollama pull <model-name> (ex: deepseek-r1)
+- have ffmpeg installed (sudo apt install ffmpeg)
 - have firefox.geckodriver installed at /snap/bin/firefox.geckodriver (whereis firefox.geckodriver). Can install firefox snap on WSL using ``sudo snap install firefox``
 
 ## Windows + WSL
