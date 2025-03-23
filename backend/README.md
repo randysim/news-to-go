@@ -21,6 +21,9 @@ This will allow WSL to access the OLLAMA api. Make sure to replace localhost wit
 
 Address as WSL and windows have two different network configurations.
 
+Make sure to restart ollama. You can test if it works by trying to access ollama at localhost:11434 and then
+<computer-ip>:11434.
+
 ## Run individual scripts as test
 
 ``python -m modules.folder.script_name`` without the .py
