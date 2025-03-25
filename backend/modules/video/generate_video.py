@@ -183,7 +183,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
             duration = end - start if end > 0 else total_duration - start
 
             if media["type"] == "image":
-                media_clip = ImageClip(media_path).set_duration(duration)
+                media_clip = ImageClip(media_path).with_duration(duration)
             else:
                 media_clip = VideoFileClip(media_path)
                 media_clip = media_clip.without_audio()
