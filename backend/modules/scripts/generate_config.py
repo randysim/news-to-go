@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     print("Running tests...")
 
-    test_url = "https://www.thejakartapost.com/life/2019/07/22/dharma-dogs-buddhist-chants-calm-stray-myanmar-mutts.html"
+    test_url = "https://apnews.com/article/thailand-earthquake-bangkok-4fce87aced74b1fc0cf260fb5454d353"
     output_dir = "tests"
 
     print("Scraping generic...")

@@ -8,6 +8,9 @@ certifi==2025.1.31
 charset-normalizer==3.4.1
 decorator==5.2.1
 Django==5.1.7
+django-cors-headers==4.7.0
+djangorestframework==3.16.0
+djangorestframework_simplejwt==5.5.0
 exceptiongroup==1.2.2
 filelock==3.18.0
 fsspec==2025.3.0
@@ -47,6 +50,7 @@ proglog==0.1.10
 pydantic==2.10.6
 pydantic_core==2.27.2
 pygame==2.6.1
+PyJWT==2.9.0
 PySocks==1.7.1
 python-dotenv==1.0.1
 pyttsx3==2.98

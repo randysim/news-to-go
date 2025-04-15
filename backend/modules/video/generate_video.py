@@ -147,6 +147,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
         override = keyword_image_overrides.get(str(i))
         media_url = ""
         media_type = ""
+        
         if override and override.get("url"):
             media_url = override["url"]
             media_type = override["type"]
@@ -154,7 +155,12 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
             media_url, media_type = search_media(keyword, urls_used)
 
         urls_used.add(media_url)
-        media_path = download_media(media_url, os.path.join(directory, "media", filename))
+
+        # Check if media is a direct file path
+
+        media_path = media_url
+        if not os.path.exists(media_path):
+            media_path = download_media(media_url, os.path.join(directory, "media", filename))
 
         medias.append({ "path": media_path, "sentence": current_sentence, "type": media_type })
         print(f"Downloaded {len(medias)}/{len(keywords)} for {title}")
