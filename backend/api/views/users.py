@@ -11,6 +11,9 @@ class UserView(APIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
 
     def post(self, request):
         serializer = UserSerializer(data=request.data)
