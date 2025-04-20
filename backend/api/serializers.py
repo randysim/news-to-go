@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Video
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,4 +10,9 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
-            
+
+class VideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = ['id', 'title', 'news_url', 'news_content', 'script', 'config', 'video_url', 'created_at', 'updated_at']
+        
