@@ -23,7 +23,8 @@ class JobView(APIView):
         return Response({"job": {
             "status": job["status"],
             "successful": job["successful"],
-            "error": job["error"]
+            "error": job["error"],
+            "job_type": job["job_type"]
         }}, status=status.HTTP_200_OK)
 
     def post(self, request, video_id):
@@ -67,7 +68,7 @@ class JobView(APIView):
             return Response({"error": "Invalid job type"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            job_queue.enqueue_job(video_id, job)
+            job_queue.enqueue_job(video_id, job, job_type)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         

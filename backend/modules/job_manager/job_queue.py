@@ -16,7 +16,7 @@ class JobQueue:
         with self._lock:
             return self._current_job
     
-    def enqueue_job(self, video_id: int, job):
+    def enqueue_job(self, video_id: int, job, job_type: str):
         debug_print(f"Enqueuing job for video {video_id}, total of {len(self._queue)} jobs in queue")
 
         current_job = self.get_job_by_video_id(video_id)
@@ -30,6 +30,7 @@ class JobQueue:
                 "status": "PENDING",
                 "successful": None,
                 "error": None,
+                "job_type": job_type,
             }
             self._queue.append(job_obj)
             self._video_id_index[video_id] = job_obj # keep last job in here for video
