@@ -32,9 +32,6 @@ class JobView(APIView):
         if not video_id:
             return Response({"error": "Video ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if job_queue.current_job and job_queue.current_job["video_id"] == video_id:
-            return Response({"error": "Job is already running for this video"}, status=status.HTTP_400_BAD_REQUEST)
-
         video = Video.objects.get(id=video_id)
         if video.video_creator != request.user:
             return Response({"error": "You are not authorized to create jobs for this video"}, status=status.HTTP_403_FORBIDDEN)
@@ -69,5 +66,9 @@ class JobView(APIView):
         else:
             return Response({"error": "Invalid job type"}, status=status.HTTP_400_BAD_REQUEST)
 
-        job_queue.enqueue_job(video_id, job)
+        try:
+            job_queue.enqueue_job(video_id, job)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
         return Response({"message": "Job created"}, status=status.HTTP_200_OK)

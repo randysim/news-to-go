@@ -19,7 +19,8 @@ class JobQueue:
     def enqueue_job(self, video_id: int, job):
         debug_print(f"Enqueuing job for video {video_id}, total of {len(self._queue)} jobs in queue")
 
-        if self.get_job_by_video_id(video_id):
+        current_job = self.get_job_by_video_id(video_id)
+        if current_job and current_job.get("status") != "FINISHED":
             raise ValueError(f"Job already exists for video {video_id}")
         
         with self._lock:
