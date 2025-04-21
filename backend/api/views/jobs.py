@@ -65,5 +65,5 @@ class JobView(APIView):
         else:
             return Response({"error": "Invalid job type"}, status=status.HTTP_400_BAD_REQUEST)
 
-        job_queue.enqueue(video_id, job)
+        job_queue.enqueue_job(video_id, job)
         return Response({"message": "Job created"}, status=status.HTTP_200_OK)

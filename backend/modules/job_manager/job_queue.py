@@ -1,5 +1,6 @@
 from collections import deque
 from threading import Lock, Thread
+from ..utils import debug_print
 
 class JobQueue:
     def __init__(self):
@@ -11,6 +12,8 @@ class JobQueue:
         self._video_id_index = {}
     
     def enqueue_job(self, video_id: int, job):
+        debug_print(f"Enqueuing job for video {video_id}, total of {len(self._queue)} jobs in queue")
+
         if self.get_job_by_video_id(video_id):
             raise ValueError(f"Job already exists for video {video_id}")
         
@@ -23,6 +26,8 @@ class JobQueue:
                 "error": None,
             })
             self._video_id_index[video_id] = job # keep last job in here for video
+        
+        self.start_next_job()
     
     def start_next_job(self):
         with self._lock:
@@ -35,6 +40,8 @@ class JobQueue:
             self._is_job_running = True
             self._current_job = self._queue.popleft()
             self._current_job["status"] = "RUNNING"
+
+            debug_print(f"Starting job for video {self._current_job['video_id']}, total of {len(self._queue)} jobs in queue")
 
             # Start the job in a new thread
             thread = Thread(target=self._run_job)
@@ -55,6 +62,8 @@ class JobQueue:
             self.finish_current_job(successful, error)
     
     def finish_current_job(self, successful: bool, error: Exception):
+        debug_print(f"Finishing job for video {self._current_job['video_id']}, total of {len(self._queue)} jobs in queue")
+        
         with self._lock:
             if not self._is_job_running:
                 return None
