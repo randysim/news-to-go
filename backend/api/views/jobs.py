@@ -5,6 +5,7 @@ from modules.job_manager.job_queue import job_queue
 from modules.job_manager.jobs import create_video_job, create_script_job, create_scrape_job
 from rest_framework.permissions import IsAuthenticated
 from ..models import Video
+import json
 
 class JobView(APIView):
     permission_classes = [IsAuthenticated]
@@ -41,8 +42,25 @@ class JobView(APIView):
                 return Response({"error": "URL is required"}, status=status.HTTP_400_BAD_REQUEST)
             job = create_scrape_job(video_id, url)
         elif job_type == "SCRIPT":
+            if not video.news_content:
+                return Response({"error": "News content is required"}, status=status.HTTP_400_BAD_REQUEST)
             job = create_script_job(video_id)
         elif job_type == "VIDEO":
+            if not video.script:
+                return Response({"error": "Script is required"}, status=status.HTTP_400_BAD_REQUEST)
+            if not video.config:
+                return Response({"error": "Config is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # check if either there is a keyword or keyword_image_overrides in each index in config
+            config = json.loads(video.config)
+            for i in range(len(config["keywords"])):
+                if (
+                    not config["keywords"][i]["keyword"][0] and
+                    not config["keywords"][i]["keyword"][1] and
+                    not config["keyword_image_overrides"][i]["url"]
+                ):
+                    return Response({"error": "Keyword or keyword_image_overrides is required at index " + str(i)}, status=status.HTTP_400_BAD_REQUEST)
+                
             job = create_video_job(video_id)
         else:
             return Response({"error": "Invalid job type"}, status=status.HTTP_400_BAD_REQUEST)
