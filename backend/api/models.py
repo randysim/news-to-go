@@ -28,10 +28,10 @@ class User(AbstractBaseUser):
 class Video(models.Model):
     title = models.CharField(max_length=255)
     news_url = models.URLField(max_length=500, null=True)
+    news_title = models.TextField(null=True)
     news_content = models.TextField(null=True)
     script = models.TextField(null=True)
     config = models.TextField(null=True)  # Will store JSON as string
-    video_url = models.URLField(max_length=500, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     video_creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='videos')

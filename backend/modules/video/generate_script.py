@@ -2,6 +2,7 @@ from ollama import Client
 from .clean import clean_think, clean_bullet_points, clean_characters, clean_double_newlines, clean_em_dashes, clean_double_space, clean_colons, get_within_tags, clean_html_tags, clean_non_ascii, clean_main_quotes, clean_percent, clean_titles
 import os
 from datetime import datetime
+from ..utils import debug_print
 
 SUMMARY_SYSTEM_MESSAGE = """You are a helpful summarizer. You will be given text to summarize into a paragraph. Write in complete english sentences and avoid referencing the text itself (e.g. phrases like "the text states" or "the text mentions")."""
 
@@ -72,13 +73,13 @@ def generate_script(news_content):
 
     script = response['message']['content']
     while not is_valid_script(script) or is_play_script(script):
-        print("Regenerating invalid script...")
+        debug_print("Regenerating invalid script...")
         now = datetime.now()
         formatted_date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
         error_file = os.path.join(os.getenv("ERROR_DIRECTORY"), f"SCRIPT_ERROR_{formatted_date_str}.txt")
         with open(error_file, "w") as f:
             f.write(script)
-        print(f"Error script saved to {error_file}")
+        debug_print(f"Error script saved to {error_file}")
         
         response = client.chat(
             model=MODEL,
@@ -121,7 +122,7 @@ def generate_script_file(script_name, directory, summary, script):
         f.write(f"SUMMARY:\n{summary}\n\nSCRIPT:\n{script}")
 
 if __name__ == "__main__":
-    print("Attempting to generate scripts...")
+    debug_print("Attempting to generate scripts...")
     PATH_TO_NEWS = "/home/randy/projects/news-to-go/backend/tests/test_news.txt"
 
     if not os.path.exists("tests"):
@@ -138,5 +139,5 @@ if __name__ == "__main__":
     for i in range(2):
         script_name = f"script_{i}"
         generate_script_file(news_content, script_name, "tests/scripts")
-        print(f"Generated script {script_name}")
-    print("Done generating scripts")
+        debug_print(f"Generated script {script_name}")
+    debug_print("Done generating scripts")

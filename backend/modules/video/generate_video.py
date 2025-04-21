@@ -7,6 +7,7 @@ import re
 import os
 from pathlib import Path
 import json
+from ..utils import debug_print
 
 from moviepy import *
 
@@ -68,24 +69,24 @@ def gather_video_resources(title, news_content, should_generate_keywords=True, d
     filename = title.replace(" ", "_").lower()
     filename = re.sub(r'[^a-z0-9_]', '', filename)
 
-    print(f"Generating script for {title}...")
+    debug_print(f"Generating script for {title}...")
     summary, script, _, _ = generate_script(news_content)
     Path(os.path.join(directory, "scripts")).mkdir(parents=True, exist_ok=True)
     generate_script_file(filename, os.path.join(directory, "scripts"), summary, script) # Just to track the progress
 
-    print(f"Generating audio for {title}...")
+    debug_print(f"Generating audio for {title}...")
     audio_file_path = generate_audio_from_script(script, filename, os.path.join(directory, "audio"))
-    print(f"Audio file saved at {audio_file_path}")
-    print(f"Generating captions for {title}...")
+    debug_print(f"Audio file saved at {audio_file_path}")
+    debug_print(f"Generating captions for {title}...")
     captions = fix_captions(generate_captions(audio_file_path), script)
 
-    print(f"Generating sentence starts for {title}...")
+    debug_print(f"Generating sentence starts for {title}...")
     # to get the end of the first clip, it is the start of the clip index + every_n_sentences and if not then just to the end of the video
     sentence_starts = get_sentence_starts(script, captions)
 
     every_n_sentences = 1
-    print(f"Generating images for {title}...")
-    print(f"Generating keywords...")
+    debug_print(f"Generating images for {title}...")
+    debug_print(f"Generating keywords...")
     keywords = generate_keywords(script, every_n_sentences, empty=not should_generate_keywords)
     
     keyword_image_overrides = {}
@@ -139,7 +140,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     medias = []
     current_sentence = 0
 
-    print(f"Downloading media for {title}...")
+    debug_print(f"Downloading media for {title}...")
 
     for i, kw_data in enumerate(keywords):
         keyword = kw_data["keyword"]
@@ -163,11 +164,11 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
             media_path = download_media(media_url, os.path.join(directory, "media", filename))
 
         medias.append({ "path": media_path, "sentence": current_sentence, "type": media_type })
-        print(f"Downloaded {len(medias)}/{len(keywords)} for {title}")
+        debug_print(f"Downloaded {len(medias)}/{len(keywords)} for {title}")
 
         current_sentence += every_n_sentences
     
-    print(f"Editing video for {title}...")
+    debug_print(f"Editing video for {title}...")
     voice_over = AudioFileClip(audio_file_path)
     total_duration = voice_over.duration # measured in seconds
     
@@ -188,7 +189,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
             end = sentence_starts[str(sentence_num + every_n_sentences)]["start"] if str(sentence_num + every_n_sentences) in sentence_starts else total_duration
             duration = end - start if end > 0 else total_duration - start
 
-            if media["type"] == "image":
+            if media["type"].lower() == "image":
                 media_clip = ImageClip(media_path).with_duration(duration)
             else:
                 media_clip = VideoFileClip(media_path)
@@ -206,7 +207,7 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
             
             batch_clips.append(media_clip)
         
-        print(f"Rendering batch {i//5 + 1}/{(len(medias) + batch_size - 1) // batch_size} for {title}")
+        debug_print(f"Rendering batch {i//5 + 1}/{(len(medias) + batch_size - 1) // batch_size} for {title}")
         batch_video = concatenate_videoclips(batch_clips)
         temp_file = os.path.join(directory, "temp", f"{filename}_{i}.mp4")
         batch_video.write_videofile(temp_file, fps=30)
@@ -222,22 +223,23 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     bg_music = bg_music.with_volume_scaled(0.03)
 
     bg_audio = CompositeAudioClip([bg_music, voice_over])
-    print("Finished generating background audio. Generating captions...")
+    debug_print("Finished generating background audio. Generating captions...")
 
     # Create the captions
     subtitles = create_subtitles(captions, (1920, 1080))
-    print("Finished generating subtitles")
+    debug_print("Finished generating subtitles")
 
     video_clips = [VideoFileClip(clip) for clip in temp_files]
     video = concatenate_videoclips(video_clips)
     final_video = CompositeVideoClip([video, subtitles])
     final_video = final_video.with_audio(bg_audio)
 
-    print("Finished compositing video. Writing...")
+    debug_print("Finished compositing video. Writing...")
 
     # write the video
     Path(os.path.join(directory, "video_output")).mkdir(parents=True, exist_ok=True)
-    final_video.write_videofile(os.path.join(directory, "video_output", f"{filename}.mp4"), fps=30)
+    final_video_path = os.path.join(directory, "video_output", f"{filename}.mp4")
+    final_video.write_videofile(final_video_path, fps=30)
 
     for video_clip in video_clips:
         video_clip.close()
@@ -247,11 +249,21 @@ def construct_video(title, audio_file_path, keywords, captions, sentence_starts,
     voice_over.close()
 
     # Delete temp files
-    print("Deleting temp files...")
+    debug_print("Deleting temp files...")
     for temp_file in temp_files:
         os.remove(temp_file)
     
-    print("Done generating video!")
+    # delete media files
+    for media in medias:
+        if os.path.exists(media["path"]):
+            os.remove(media["path"])
+
+    # delete audio file after done
+    os.remove(audio_file_path)
+    
+    debug_print("Done generating video!")
+
+    return final_video_path
 
 def save_config(title, audio_file_path, keywords, captions, sentence_starts, filename, directory, every_n_sentences, keyword_image_overrides, save_dir):
     resources = {

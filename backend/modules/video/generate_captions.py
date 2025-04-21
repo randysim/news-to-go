@@ -88,9 +88,6 @@ def find_next_match(script_words, script_idx, captions, caption_idx, max_lookahe
     # No match found within lookahead window
     return None
 
-
-    
-
 if __name__ == "__main__":
     TEST_AUDIO = "audio/test_script_53242.wav"
 

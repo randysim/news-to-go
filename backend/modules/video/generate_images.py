@@ -6,6 +6,7 @@ from pathlib import Path
 from ollama import Client
 from .clean import get_within_tags, clean_think, clean_double_newlines, clean_double_space, clean_main_quotes, clean_non_ascii, clean_colons, clean_html_tags
 from datetime import datetime
+from ..utils import debug_print
 
 KEYWORD_MESSAGE = """You are a specialized keyword generator for image searches. When given text, generate ONE highly specific two-word keyword phrase that precisely captures the unique technical context of the provided content.
 
@@ -76,7 +77,7 @@ def generate_keyword(text):
     )
 
     while not is_valid_keyword(response["message"]["content"]):
-        print("Invalid keyword. Trying again...")
+        debug_print("Invalid keyword. Trying again...")
 
         now = datetime.now()
         formatted_date_str = now.strftime("%Y-%m-%d_%H-%M-%S")
@@ -120,7 +121,7 @@ def generate_keywords(script, every_n_sentences=2, empty=False):
             "idx": str(cur)
         })
         cur += 1
-        print(f"Generated keyword: {' '.join(keywords[-1].get('keyword'))} -- {cur}/{len(fragments)}")
+        debug_print(f"Generated keyword: {' '.join(keywords[-1].get('keyword'))} -- {cur}/{len(fragments)}")
     
     return keywords
 
@@ -241,10 +242,10 @@ def download_media(url, directory=None):
                 if chunk:
                     file.write(chunk)
         
-        print(f"Downloaded {full_path} successfully.")
+        debug_print(f"Downloaded {full_path} successfully.")
         return full_path
     else:
-        print(f"Failed to download media. Status code: {response.status_code}")
+        debug_print(f"Failed to download media. Status code: {response.status_code}")
         return None
 
 

@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from contextlib import contextmanager
+from ..video.clean import clean_double_space, clean_characters
 import os
 
 @contextmanager
@@ -98,7 +99,7 @@ def scrape_generic(url):
         for key, value in character_replacements.items():
             article_content = article_content.replace(key, value)
         
-        return title, article_content
+        return clean_double_space(clean_characters(title)).replace("_", " "), article_content
         
 
 if __name__ == "__main__":
