@@ -6,7 +6,7 @@ from modules.job_manager.jobs import create_video_job, create_script_job, create
 from rest_framework.permissions import IsAuthenticated
 from ..models import Video
 
-class JobStatusView(APIView):
+class JobView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, video_id):
@@ -24,12 +24,8 @@ class JobStatusView(APIView):
             "error": job["error"]
         }}, status=status.HTTP_200_OK)
 
-class JobCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
+    def post(self, request, video_id):
         job_type = request.data.get("job_type")
-        video_id = request.data.get("video_id")
 
         if not video_id:
             return Response({"error": "Video ID is required"}, status=status.HTTP_400_BAD_REQUEST)
