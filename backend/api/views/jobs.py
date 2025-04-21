@@ -14,6 +14,7 @@ class JobView(APIView):
         job = job_queue.get_job_by_video_id(video_id)
         if not job:
             return Response({ "job": { "status": "FINISHED" }}, status=status.HTTP_200_OK)
+        
         video = Video.objects.get(id=video_id)
 
         if video.video_creator != request.user:
@@ -30,6 +31,9 @@ class JobView(APIView):
 
         if not video_id:
             return Response({"error": "Video ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if job_queue.current_job and job_queue.current_job["video_id"] == video_id:
+            return Response({"error": "Job is already running for this video"}, status=status.HTTP_400_BAD_REQUEST)
 
         video = Video.objects.get(id=video_id)
         if video.video_creator != request.user:

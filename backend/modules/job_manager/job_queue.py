@@ -11,6 +11,11 @@ class JobQueue:
         # Make indexing jobs faster
         self._video_id_index = {}
     
+    @property
+    def current_job(self):
+        with self._lock:
+            return self._current_job
+    
     def enqueue_job(self, video_id: int, job):
         debug_print(f"Enqueuing job for video {video_id}, total of {len(self._queue)} jobs in queue")
 
