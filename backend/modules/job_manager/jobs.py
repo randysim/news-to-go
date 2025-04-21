@@ -1,4 +1,4 @@
-from ....backend.api.models import Video
+from api.models import Video
 from ..scraper.scrape_generic import scrape_generic
 from ..video.generate_script import generate_script
 from ..video.generate_images import generate_keywords
