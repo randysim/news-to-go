@@ -12,7 +12,7 @@ class JobStatusView(APIView):
     def get(self, request, video_id):
         job = job_queue.get_job_by_video_id(video_id)
         if not job:
-            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({ "job": { "status": "FINISHED" }}, status=status.HTTP_200_OK)
         video = Video.objects.get(id=video_id)
 
         if video.video_creator != request.user:

@@ -10,5 +10,5 @@ urlpatterns = [
     path('videos/', VideoView.as_view(), name='video-list'),
     path('videos/<int:id>/', VideoDetailView.as_view(), name='video-detail'),
     path('videos/jobs/', JobCreateView.as_view(), name='job-list'),
-    path('videos/<int:video_id>/jobs', JobStatusView.as_view(), name='job-status'),
+    path('videos/<int:video_id>/jobs/', JobStatusView.as_view(), name='job-status'),
 ]
