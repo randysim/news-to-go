@@ -24,7 +24,7 @@ class JobStatusView(APIView):
             "error": job["error"]
         }}, status=status.HTTP_200_OK)
 
-class JobView(APIView):
+class JobCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
