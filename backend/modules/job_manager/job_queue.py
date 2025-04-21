@@ -18,14 +18,15 @@ class JobQueue:
             raise ValueError(f"Job already exists for video {video_id}")
         
         with self._lock:
-            self._queue.append({
+            job_obj = {
                 "video_id": video_id,
                 "job": job,
                 "status": "PENDING",
                 "successful": None,
                 "error": None,
-            })
-            self._video_id_index[video_id] = job # keep last job in here for video
+            }
+            self._queue.append(job_obj)
+            self._video_id_index[video_id] = job_obj # keep last job in here for video
         
         self.start_next_job()
     
@@ -63,16 +64,16 @@ class JobQueue:
     
     def finish_current_job(self, successful: bool, error: Exception):
         debug_print(f"Finishing job for video {self._current_job['video_id']}, total of {len(self._queue)} jobs in queue")
-        
+
         with self._lock:
             if not self._is_job_running:
                 return None
             
-            self._current_job["status"] = "FINISHED"
             self._is_job_running = False
-            self._current_job = None
+            self._current_job["status"] = "FINISHED"
             self._current_job["successful"] = successful
             self._current_job["error"] = str(error) if error else None
+            self._current_job = None
             
             if self._queue:
                 self.start_next_job()
