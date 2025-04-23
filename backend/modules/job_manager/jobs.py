@@ -54,6 +54,7 @@ def create_script_job(video_id: int):
         debug_print(f"Script generated for {news_title}")
     return job
 
+# maybe fix hardcoded resource directory later?
 def create_video_job(video_id: int):
     def job():
         video = Video.objects.get(id=video_id)
@@ -64,7 +65,7 @@ def create_video_job(video_id: int):
 
         debug_print(f"Generating video for {video.news_title}...")
 
-        audio_file_path = generate_audio_from_script(video.script, video.news_title, video.directory)
+        audio_file_path = generate_audio_from_script(video.script, video.news_title, "resource")
 
         captions = fix_captions(generate_captions(audio_file_path), video.script)
 
