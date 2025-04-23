@@ -59,7 +59,7 @@ class JobView(APIView):
                 if (
                     not config["keywords"][i]["keyword"][0] and
                     not config["keywords"][i]["keyword"][1] and
-                    not config["keyword_image_overrides"][i]["url"]
+                    not config["keyword_image_overrides"].get(str(i))["url"]
                 ):
                     return Response({"error": "Keyword or keyword_image_overrides is required at index " + str(i)}, status=status.HTTP_400_BAD_REQUEST)
                 
