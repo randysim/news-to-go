@@ -1,22 +1,25 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   activeTab: 'login' | 'signup' = 'login';
   loginForm: FormGroup;
   signupForm: FormGroup;
+  errorMessage: string = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -30,14 +33,34 @@ export class LoginComponent {
     });
   }
 
+  ngOnInit() {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/']);
+    }
+  }
+
   switchTab(tab: 'login' | 'signup') {
     this.activeTab = tab;
   }
 
   onLogin() {
     if (this.loginForm.valid) {
-      // TODO: Implement login logic
-      console.log('Login form submitted:', this.loginForm.value);
+      const { email, password } = this.loginForm.value;
+      this.errorMessage = '';
+      
+      this.authService.login(email, password).subscribe({
+        next: () => {
+          // Wait for the user state to be initialized
+          this.authService.currentUser$.subscribe(user => {
+            if (user) {
+              this.router.navigate(['/']);
+            }
+          });
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+        }
+      });
     } else {
       this.loginForm.markAllAsTouched();
     }
@@ -45,8 +68,23 @@ export class LoginComponent {
 
   onSignup() {
     if (this.signupForm.valid) {
-      // TODO: Implement signup logic
-      console.log('Signup form submitted:', this.signupForm.value);
+      const { email, password, confirmPassword } = this.signupForm.value;
+      
+      if (password !== confirmPassword) {
+        this.errorMessage = 'Passwords do not match';
+        return;
+      }
+
+      this.errorMessage = '';
+      
+      this.authService.register(email, password).subscribe({
+        next: () => {
+          this.router.navigate(['/']);
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+        }
+      });
     } else {
       this.signupForm.markAllAsTouched();
     }

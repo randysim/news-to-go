@@ -1,8 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { setAuthTokenGetters } from '../interceptors/auth.interceptor';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface User {
   id: number;
@@ -39,11 +41,20 @@ export class AuthService {
   private readonly ACCESS_TOKEN_KEY = 'access_token';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private isBrowser: boolean;
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    // Set up token getters for the interceptor
+    setAuthTokenGetters(
+      () => this.getAccessToken(),
+      () => this.getRefreshToken(),
+      () => this.logout()
+    );
     this.initializeAuth();
   }
 
@@ -59,6 +70,8 @@ export class AuthService {
   }
 
   private setCookie(name: string, value: string, days: number): void {
+    if (!this.isBrowser) return;
+    
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
     const expires = `expires=${date.toUTCString()}`;
@@ -66,10 +79,14 @@ export class AuthService {
   }
 
   private deleteCookie(name: string): void {
+    if (!this.isBrowser) return;
+    
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Strict;Secure`;
   }
 
   private getCookie(name: string): string | null {
+    if (!this.isBrowser) return null;
+    
     const nameWithEquals = name + '=';
     const decodedCookie = decodeURIComponent(document.cookie);
     const cookieArray = decodedCookie.split(';');
@@ -97,7 +114,7 @@ export class AuthService {
       .pipe(
         tap(response => {
           this.setSession(response, null);
-          this.fetchUserInfo().subscribe();
+          this.fetchUserInfo().subscribe(); // angular observables are cold by default
         })
       );
   }
@@ -132,7 +149,13 @@ export class AuthService {
     this.deleteCookie(this.ACCESS_TOKEN_KEY);
     this.deleteCookie(this.REFRESH_TOKEN_KEY);
     this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+    
+    // Only redirect to login if on a protected page
+    const currentRoute = this.router.url;
+    const publicRoutes = ['/', '/login'];
+    if (!publicRoutes.includes(currentRoute)) {
+      this.router.navigate(['/login']);
+    }
   }
 
   private setSession(tokens: Tokens, user: User | null): void {

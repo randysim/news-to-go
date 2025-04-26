@@ -1,17 +1,31 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError, switchMap } from 'rxjs';
-import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+
+// Create a token getter function that can be set by AuthService
+let getAccessToken: () => string | null = () => null;
+let getRefreshToken: () => string | null = () => null;
+let logout: () => void = () => {};
+
+// Function to set the token getters (called by AuthService)
+export const setAuthTokenGetters = (
+  accessTokenGetter: () => string | null,
+  refreshTokenGetter: () => string | null,
+  logoutFn: () => void
+) => {
+  getAccessToken = accessTokenGetter;
+  getRefreshToken = refreshTokenGetter;
+  logout = logoutFn;
+};
 
 export const authInterceptor: HttpInterceptorFn = (
   request: HttpRequest<unknown>,
   next: HttpHandlerFn
 ) => {
-  const authService = inject(AuthService);
   const router = inject(Router);
-  
-  const accessToken = authService.getAccessToken();
+  const accessToken = getAccessToken();
   
   if (accessToken) {
     request = request.clone({
@@ -25,24 +39,32 @@ export const authInterceptor: HttpInterceptorFn = (
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && !request.url.includes('auth/token/refresh')) {
         // Try to refresh the token
-        return authService.refreshToken().pipe(
-          switchMap(() => {
-            // Retry the original request with the new token
-            const newToken = authService.getAccessToken();
-            const newRequest = request.clone({
-              setHeaders: {
-                Authorization: `Bearer ${newToken}`
-              }
-            });
-            return next(newRequest);
-          }),
-          catchError((refreshError) => {
-            // If refresh fails, logout and redirect to login
-            authService.logout();
-            router.navigate(['/login']);
-            return throwError(() => refreshError);
-          })
-        );
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          logout();
+          router.navigate(['/login']);
+          return throwError(() => error);
+        }
+
+        // Make a direct HTTP call to refresh token (avoiding AuthService)
+        return inject(HttpClient).post<{ access: string }>('/api/auth/token/refresh/', {})
+          .pipe(
+            switchMap((response) => {
+              // Update the token using the getter
+              const newToken = response.access;
+              const newRequest = request.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${newToken}`
+                }
+              });
+              return next(newRequest);
+            }),
+            catchError((refreshError) => {
+              logout();
+              router.navigate(['/login']);
+              return throwError(() => refreshError);
+            })
+          );
       }
       return throwError(() => error);
     })

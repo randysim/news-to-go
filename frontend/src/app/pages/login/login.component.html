@@ -59,6 +59,9 @@
               {{ error }}
             </div>
           </div>
+          <div *ngIf="errorMessage" class="mt-2">
+            <div class="text-red-500 text-xs">{{ errorMessage }}</div>
+          </div>
         </div>
 
         <div>
@@ -123,6 +126,9 @@
             <div *ngFor="let error of getSignupErrors()" class="text-red-500 text-xs">
               {{ error }}
             </div>
+          </div>
+          <div *ngIf="errorMessage" class="mt-2">
+            <div class="text-red-500 text-xs">{{ errorMessage }}</div>
           </div>
         </div>
 

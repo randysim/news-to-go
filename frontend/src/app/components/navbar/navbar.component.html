@@ -12,9 +12,12 @@
         </div>
       </div>
       <div class="hidden sm:ml-6 sm:flex sm:items-center">
-        <button routerLink="/login" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium">
-          Login
-        </button>
+          <button *ngIf="!isAuthenticated" routerLink="/login" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+            Login
+          </button>
+          <button *ngIf="isAuthenticated" (click)="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+            Logout
+          </button>
       </div>
       <!-- Mobile menu button -->
       <div class="flex items-center sm:hidden">
@@ -40,8 +43,11 @@
         Home
       </a>
       <div class="mt-4 pl-3">
-        <button routerLink="/login" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+        <button *ngIf="!isAuthenticated" routerLink="/login" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium">
           Login
+        </button>
+        <button *ngIf="isAuthenticated" (click)="logout()" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+          Logout
         </button>
       </div>
     </div>
