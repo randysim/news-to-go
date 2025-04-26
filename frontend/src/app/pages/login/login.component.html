@@ -1,0 +1,143 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
+    <!-- Tabs -->
+    <div class="flex border-b border-gray-200">
+      <button 
+        (click)="switchTab('login')"
+        [class.border-blue-500]="activeTab === 'login'"
+        [class.text-blue-600]="activeTab === 'login'"
+        class="flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm focus:outline-none"
+      >
+        Login
+      </button>
+      <button 
+        (click)="switchTab('signup')"
+        [class.border-blue-500]="activeTab === 'signup'"
+        [class.text-blue-600]="activeTab === 'signup'"
+        class="flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm focus:outline-none"
+      >
+        Sign Up
+      </button>
+    </div>
+
+    <!-- Form Container with fixed height -->
+    <div class="h-[200px]">
+      <!-- Login Form -->
+      <form *ngIf="activeTab === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()" class="h-full flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label for="email" class="sr-only">Email address</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                formControlName="email"
+                required
+                [class.border-red-500]="loginForm.get('email')?.errors && loginForm.get('email')?.touched"
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              >
+            </div>
+            <div>
+              <label for="password" class="sr-only">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                formControlName="password"
+                required
+                [class.border-red-500]="loginForm.get('password')?.errors && loginForm.get('password')?.touched"
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+              >
+            </div>
+          </div>
+          <!-- Error Messages -->
+          <div *ngIf="getLoginErrors().length > 0" class="mt-2">
+            <div *ngFor="let error of getLoginErrors()" class="text-red-500 text-xs">
+              {{ error }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            [disabled]="!loginForm.valid"
+            [class.opacity-50]="!loginForm.valid"
+            [class.cursor-not-allowed]="!loginForm.valid"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
+          >
+            Sign in
+          </button>
+        </div>
+      </form>
+
+      <!-- Signup Form -->
+      <form *ngIf="activeTab === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()" class="h-full flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label for="signup-email" class="sr-only">Email address</label>
+              <input
+                id="signup-email"
+                name="email"
+                type="email"
+                formControlName="email"
+                required
+                [class.border-red-500]="signupForm.get('email')?.errors && signupForm.get('email')?.touched"
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              >
+            </div>
+            <div>
+              <label for="signup-password" class="sr-only">Password</label>
+              <input
+                id="signup-password"
+                name="password"
+                type="password"
+                formControlName="password"
+                required
+                [class.border-red-500]="signupForm.get('password')?.errors && signupForm.get('password')?.touched"
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+              >
+            </div>
+            <div>
+              <label for="confirm-password" class="sr-only">Confirm Password</label>
+              <input
+                id="confirm-password"
+                name="confirmPassword"
+                type="password"
+                formControlName="confirmPassword"
+                required
+                [class.border-red-500]="signupForm.get('confirmPassword')?.errors && signupForm.get('confirmPassword')?.touched"
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm Password"
+              >
+            </div>
+          </div>
+          <!-- Error Messages -->
+          <div *ngIf="getSignupErrors().length > 0" class="mt-2">
+            <div *ngFor="let error of getSignupErrors()" class="text-red-500 text-xs">
+              {{ error }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            [disabled]="!signupForm.valid"
+            [class.opacity-50]="!signupForm.valid"
+            [class.cursor-not-allowed]="!signupForm.valid"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
+          >
+            Sign up
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
