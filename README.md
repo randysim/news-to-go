@@ -1,5 +1,12 @@
 # news-to-go
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-4.2%2B-green)](https://www.djangoproject.com/)
+[![Angular](https://img.shields.io/badge/Angular-16%2B-red)](https://angular.io/)
+[![Ollama](https://img.shields.io/badge/Ollama-Latest-orange)](https://ollama.ai/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/randysim/news-to-go/pulls)
+
 A fullstack application built using Angular, Django/rest-framework, and Ollama. Converts any news article into a short form video!
 
 Instructions to run the frontend and backend are in the respective directories.
