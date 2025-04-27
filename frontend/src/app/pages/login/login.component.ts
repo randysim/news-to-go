@@ -53,7 +53,7 @@ export class LoginComponent implements OnInit {
           // Wait for the user state to be initialized
           this.authService.currentUser$.subscribe(user => {
             if (user) {
-              this.router.navigate(['/']);
+              this.router.navigate(['/dashboard']);
             }
           });
         },

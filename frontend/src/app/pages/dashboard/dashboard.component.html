@@ -1,0 +1,52 @@
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Videos</h1>
+
+    <!-- Loading state -->
+    <div *ngIf="loading" class="flex justify-center items-center h-32">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ error }}</span>
+    </div>
+
+    <!-- Videos list -->
+    <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let video of videos" 
+             class="bg-white rounded-lg shadow-md p-4 flex flex-col h-full">
+            <div class="flex-grow">
+                <h2 class="text-xl font-semibold mb-2">{{ video.title }}</h2>
+                <div class="text-gray-600 text-sm mb-2">
+                    <p>Created: {{ video.created_at | date:'medium' }}</p>
+                    <p>Updated: {{ video.updated_at | date:'medium' }}</p>
+                </div>
+                <div *ngIf="video.news_title" class="mt-2">
+                    <h3 class="font-medium">News Title:</h3>
+                    <p class="text-gray-700">{{ video.news_title }}</p>
+                </div>
+                <div *ngIf="video.news_url" class="mt-2">
+                    <button 
+                        (click)="openNewsUrl(video.news_url)"
+                        class="text-blue-600 hover:text-blue-800 focus:outline-none cursor-pointer"
+                    >
+                        View News Source
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button
+                    (click)="onVideoClick(video)"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+                >
+                    Edit Video
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && !error && videos.length === 0" class="text-center py-8">
+        <p class="text-gray-500">No videos found.</p>
+    </div>
+</div>

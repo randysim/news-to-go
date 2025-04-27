@@ -1,0 +1,190 @@
+<div class="container mx-auto p-4">
+  <!-- Back Button -->
+  <div class="mb-6">
+    <button
+      (click)="router.navigate(['/dashboard'])"
+      class="flex items-center text-gray-600 hover:text-gray-900 focus:outline-none cursor-pointer"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to Dashboard
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="flex justify-center items-center h-32">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  </div>
+
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <span class="block sm:inline">{{ error }}</span>
+  </div>
+
+  <div *ngIf="!loading && !error && video" class="max-w-4xl mx-auto">
+    <!-- Stepper -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div *ngFor="let step of [1, 2, 3, 4]" class="flex items-center">
+          <div (click)="currentStep = step" 
+               [class]="'w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-200 ' + 
+            (currentStep > step ? 'bg-green-600 text-white hover:bg-green-700' : 
+             currentStep === step ? 'bg-blue-600 text-white hover:bg-blue-700' : 
+             'bg-gray-200 text-gray-600 hover:bg-gray-300')">
+            {{ step }}
+          </div>
+          <div *ngIf="step < 4" [class]="'w-24 h-1 ' + 
+            (currentStep > step ? 'bg-green-600' : 
+             currentStep === step ? 'bg-blue-600' : 
+             'bg-gray-200')"></div>
+        </div>
+      </div>
+      <div class="flex justify-between mt-2">
+        <span (click)="currentStep = 1" 
+              class="text-sm cursor-pointer hover:text-blue-600 transition-colors duration-200" 
+              [class.text-green-600]="currentStep > 1">Scrape Article</span>
+        <span (click)="currentStep = 2" 
+              class="text-sm cursor-pointer hover:text-blue-600 transition-colors duration-200" 
+              [class.text-green-600]="currentStep > 2">Generate Script</span>
+        <span (click)="currentStep = 3" 
+              class="text-sm cursor-pointer hover:text-blue-600 transition-colors duration-200" 
+              [class.text-green-600]="currentStep > 3">Configure</span>
+        <span (click)="currentStep = 4" 
+              class="text-sm cursor-pointer hover:text-blue-600 transition-colors duration-200" 
+              [class.text-green-600]="currentStep > 4">Generate Video</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Scrape Article -->
+    <div *ngIf="currentStep === 1" class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Step 1: Scrape Article</h2>
+      <div class="mb-4">
+        <label for="newsUrl" class="block text-sm font-medium text-gray-700 mb-2">News Article URL</label>
+        <input
+          type="url"
+          id="newsUrl"
+          [(ngModel)]="newsUrl"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="https://example.com/news-article"
+        >
+      </div>
+      <button
+        (click)="onScrape()"
+        [disabled]="!newsUrl || (pendingJob && pendingJobType === 'SCRAPE')"
+        [class.cursor-pointer]="newsUrl && !(pendingJob && pendingJobType === 'SCRAPE')"
+        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+      >
+        {{ pendingJob && pendingJobType === 'SCRAPE' ? 'Scraping...' : (news_content ? 'Rescrape Article' : 'Scrape Article') }}
+      </button>
+    </div>
+
+    <!-- Step 2: Generate Script -->
+    <div *ngIf="currentStep === 2" class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Step 2: Generate Script</h2>
+      <div class="mb-4 space-y-4">
+        <!-- Hook Section -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Hook</label>
+          <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+            <pre class="whitespace-pre-wrap">{{ getScriptSection('HOOK') }}</pre>
+          </div>
+        </div>
+
+        <!-- Body Section -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Body</label>
+          <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+            <pre class="whitespace-pre-wrap">{{ getScriptSection('BODY') }}</pre>
+          </div>
+        </div>
+
+        <!-- Outro Section -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Outro</label>
+          <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+            <pre class="whitespace-pre-wrap">{{ getScriptSection('OUTRO') }}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="flex space-x-4">
+        <button
+          (click)="onGenerateScript()"
+          [disabled]="!news_content || (pendingJob && pendingJobType === 'SCRIPT')"
+          [class.cursor-pointer]="news_content && !(pendingJob && pendingJobType === 'SCRIPT')"
+          class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+        >
+          {{ pendingJob && pendingJobType === 'SCRIPT' ? 'Generating...' : (script ? 'Regenerate Script' : 'Generate Script') }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Configure -->
+    <div *ngIf="currentStep === 3" class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Step 3: Configure</h2>
+      
+      <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div *ngFor="let card of configCards; let i = index" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-lg font-semibold">Fragment {{ card.index }}</span>
+          </div>
+          
+          <p class="text-gray-600 mb-4">{{ card.fragment }}</p>
+          
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">Keyword (max 2 words)</label>
+            <input
+              type="text"
+              [value]="card.config.keyword.join(' ')"
+              (input)="onKeywordChange(i, $any($event.target).value)"
+              [class.border-red-500]="keywordErrors[i]"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter keyword..."
+            >
+            <p *ngIf="keywordErrors[i]" class="text-sm text-red-600">{{ keywordErrors[i] }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 sticky bottom-0 bg-white pt-4 border-t border-gray-200">
+        <button
+          (click)="onSaveConfig()"
+          [disabled]="!configValid"
+          [class.cursor-pointer]="configValid"
+          class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+        >
+          Save Configuration
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 4: Generate Video -->
+    <div *ngIf="currentStep === 4" class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Step 4: Generate Video</h2>
+      <button
+        (click)="onGenerateVideo()"
+        [disabled]="!script || (pendingJob && pendingJobType === 'VIDEO')"
+        [class.cursor-pointer]="script && !(pendingJob && pendingJobType === 'VIDEO')"
+        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+      >
+        {{ pendingJob && pendingJobType === 'VIDEO' ? 'Generating...' : 'Generate Video' }}
+      </button>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="flex justify-between mt-6">
+      <button
+        (click)="previousStep()"
+        [disabled]="currentStep === 1"
+        class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <button
+        (click)="nextStep()"
+        [disabled]="currentStep === totalSteps"
+        class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div> 
