@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { SnackbarService } from '../../services/snackbar.service';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,8 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarService: SnackbarService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -41,6 +43,7 @@ export class LoginComponent implements OnInit {
 
   switchTab(tab: 'login' | 'signup') {
     this.activeTab = tab;
+    this.errorMessage = '';
   }
 
   onLogin() {
@@ -59,6 +62,7 @@ export class LoginComponent implements OnInit {
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+          this.snackbarService.show(this.errorMessage, 'error');
         }
       });
     } else {
@@ -72,6 +76,7 @@ export class LoginComponent implements OnInit {
       
       if (password !== confirmPassword) {
         this.errorMessage = 'Passwords do not match';
+        this.snackbarService.show(this.errorMessage, 'error');
         return;
       }
 
@@ -79,10 +84,12 @@ export class LoginComponent implements OnInit {
       
       this.authService.register(email, password).subscribe({
         next: () => {
+          this.snackbarService.show('Registration successful! Please log in.', 'success');
           this.router.navigate(['/']);
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+          this.snackbarService.show(this.errorMessage, 'error');
         }
       });
     } else {

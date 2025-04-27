@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { VideoService, Video } from '../../services/video.service';
 import { interval, Subscription } from 'rxjs';
 import { switchMap, takeWhile } from 'rxjs/operators';
+import { SnackbarService } from '../../services/snackbar.service';
 
 import { Job, JobDTO } from '../../services/video.service';
 
@@ -27,6 +28,8 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
   news_content = '';
   script = '';
   config = '';
+  videoGenerated = false;
+  videoUrl: string | null = null;
   invalidIndices: string[] = [];
   configValid = false;
   configCards: any[] = [];
@@ -38,7 +41,8 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     public router: Router,
-    private videoService: VideoService
+    private videoService: VideoService,
+    private snackbarService: SnackbarService
   ) {}
 
   ngOnInit(): void {
@@ -55,6 +59,9 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
     if (this.jobPollingSubscription) {
       this.jobPollingSubscription.unsubscribe();
     }
+    if (this.videoUrl) {
+      URL.revokeObjectURL(this.videoUrl);
+    }
   }
 
   private loadVideo(id: number): void {
@@ -68,16 +75,37 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
         this.script = video.script || '';
         this.news_content = video.news_content || '';
         this.config = video.config || '';
+        this.videoGenerated = video.video_generated || false;
         this.loading = false;
         this.checkPendingJob();
         this.updateCurrentStep();
         this.updateConfigCards();
         this.onConfigChange();
+        if (this.videoGenerated) {
+          this.loadVideoFile();
+        }
       },
       error: (error) => {
         this.error = 'Failed to load video. Please try again later.';
         this.loading = false;
         console.error('Error loading video:', error);
+      }
+    });
+  }
+
+  private loadVideoFile(): void {
+    if (!this.video) return;
+
+    this.videoService.getVideoFile(this.video.id).subscribe({
+      next: (blob) => {
+        if (this.videoUrl) {
+          URL.revokeObjectURL(this.videoUrl);
+        }
+        this.videoUrl = URL.createObjectURL(blob);
+      },
+      error: (error) => {
+        console.error('Error loading video file:', error);
+        this.error = 'Failed to load video file. Please try again later.';
       }
     });
   }
@@ -94,6 +122,12 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
       } else if (this.pendingJobType === 'VIDEO') {
         this.currentStep = 4;
       }
+      return;
+    }
+
+    // If video is already generated, go to step 4
+    if (this.videoGenerated) {
+      this.currentStep = 4;
       return;
     }
 
@@ -177,7 +211,7 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
           this.jobPollingSubscription?.unsubscribe();
           this.jobPollingSubscription = null;
           this.loadVideo(this.video!.id);
-          alert('Job completed successfully!');
+          this.snackbarService.show('Job completed successfully!', 'success');
         }
       },
       error: (error) => {
@@ -274,11 +308,12 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
       config: this.config
     }).subscribe({
       next: () => {
-        alert('Config saved successfully!');
+        this.snackbarService.show('Config saved successfully!', 'success');
       },
       error: (error) => {
         this.error = 'Failed to save config. Please try again.';
         console.error('Error saving config:', error);
+        this.snackbarService.show('Failed to save config. Please try again.', 'error');
       }
     });
   }
@@ -304,7 +339,7 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
   }
 
   nextStep(): void {
-    if (this.currentStep < this.totalSteps) {
+    if (this.currentStep < this.totalSteps && this.isCurrentStepComplete()) {
       this.currentStep++;
     }
   }
@@ -312,6 +347,42 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
+    }
+  }
+
+  isCurrentStepComplete(): boolean {
+    if (!this.video) return false;
+
+    switch (this.currentStep) {
+      case 1: // Scrape Article
+        return !!this.video.news_content;
+      case 2: // Generate Script
+        return !!this.video.script;
+      case 3: // Configure
+        return this.configValid;
+      case 4: // Generate Video
+        return true; // Always allow going to video generation
+      default:
+        return false;
+    }
+  }
+
+  isStepComplete(step: number): boolean {
+    if (!this.video) return false;
+
+    switch (step) {
+      case 0: // Scrape Article
+        return true;
+      case 1: // Scrape Article
+        return !!this.news_content;
+      case 2: // Generate Script
+        return !!this.script;
+      case 3: // Configure
+        return this.isConfigValid();
+      case 4: // Generate Video
+        return this.videoGenerated;
+      default:
+        return false;
     }
   }
 
@@ -326,7 +397,8 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
         return {
           index: parseInt(keywordConfig.idx) + 1,
           fragment: keywordConfig.fragment,
-          config: keywordConfig
+          config: keywordConfig,
+          inputValue: keywordConfig.keyword.join(' ')
         };
       });
     } catch (e) {
@@ -343,11 +415,12 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
       this.keywordErrors[cardIndex] = 'Maximum 2 words allowed';
       // Only take the first two words
       words.splice(2);
+      card.inputValue = words.join(' ');
     } else {
       this.keywordErrors[cardIndex] = '';
+      card.inputValue = keyword;
     }
     
-    card.config.keyword = [words[0] || '', words[1] || ''];
     this.updateConfigFromCards();
   }
 
@@ -359,9 +432,10 @@ export class VideoEditorComponent implements OnInit, OnDestroy {
 
     this.configCards.forEach(card => {
       const idx = (card.index - 1).toString();
+      const words = card.inputValue.trim().split(/\s+/);
       config.keywords.push({
         idx,
-        keyword: card.config.keyword,
+        keyword: [words[0] || '', words[1] || ''],
         fragment: card.fragment
       });
       

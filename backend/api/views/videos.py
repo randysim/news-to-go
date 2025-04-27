@@ -5,6 +5,10 @@ from ..serializers import VideoSerializer
 from ..models import Video
 from rest_framework import status
 import json
+import os
+from django.http import FileResponse
+from django.conf import settings
+
 class VideoView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -107,5 +111,32 @@ class VideoDetailView(APIView):
         
         video.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class VideoFileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, id):
+        try:
+            video = Video.objects.get(id=id)
+            
+            # Check if user has permission to access the video
+            if video.video_creator != request.user:
+                return Response({"detail": "You do not have permission to access this video."}, status=status.HTTP_403_FORBIDDEN)
+            
+            # Construct the video file path
+            video_path = os.path.join(settings.BASE_DIR, 'resource', 'video_output', f'{id}.mp4')
+            
+            # Check if the file exists
+            if not os.path.exists(video_path):
+                return Response({"detail": "Video file not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Serve the video file
+            response = FileResponse(open(video_path, 'rb'))
+            response['Content-Type'] = 'video/mp4'
+            response['Content-Disposition'] = f'inline; filename="{id}.mp4"'
+            return response
+            
+        except Video.DoesNotExist:
+            return Response({"detail": "Video not found."}, status=status.HTTP_404_NOT_FOUND)
         
         

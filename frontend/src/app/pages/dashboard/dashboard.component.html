@@ -13,6 +13,15 @@
 
     <!-- Videos list -->
     <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Create Video Card -->
+        <div class="bg-blue-50 rounded-lg shadow-md p-4 flex flex-col h-full border-2 border-dashed border-blue-300 hover:border-blue-400 transition-colors cursor-pointer" (click)="openCreateVideoDialog()">
+            <div class="flex-grow flex flex-col items-center justify-center">
+                <div class="text-blue-600 text-4xl mb-2">+</div>
+                <h2 class="text-xl font-semibold text-blue-700">Create New Video</h2>
+            </div>
+        </div>
+
+        <!-- Video Cards -->
         <div *ngFor="let video of videos" 
              class="bg-white rounded-lg shadow-md p-4 flex flex-col h-full">
             <div class="flex-grow">
@@ -34,12 +43,18 @@
                     </button>
                 </div>
             </div>
-            <div class="mt-4">
+            <div class="mt-4 flex gap-2">
                 <button
                     (click)="onVideoClick(video)"
-                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+                    class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
                 >
                     Edit Video
+                </button>
+                <button
+                    (click)="deleteVideo(video, $event)"
+                    class="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer"
+                >
+                    Delete
                 </button>
             </div>
         </div>

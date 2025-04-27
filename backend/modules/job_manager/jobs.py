@@ -83,6 +83,9 @@ def create_video_job(video_id: int):
             keyword_image_overrides=keyword_image_overrides
         )
 
+        video.video_generated = True
+        video.save()
+
         debug_print(f"Video generated for {video.news_title}")
 
     return job

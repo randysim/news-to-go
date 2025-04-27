@@ -13,6 +13,7 @@ export interface Video {
   config: string | null;
   created_at: string;
   updated_at: string;
+  video_generated: boolean;
 }
 
 export interface Job {
@@ -57,5 +58,19 @@ export class VideoService {
 
   createJob(videoId: number, payload: JobPayload): Observable<JobCreateDTO> {
     return this.http.post<JobCreateDTO>(`${environment.apiUrl}/videos/${videoId}/jobs/`, payload);
+  }
+
+  getVideoFile(videoId: number): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/videos/${videoId}/file/`, {
+      responseType: 'blob'
+    });
+  }
+
+  createVideo(title: string) {
+    return this.http.post<Video>(`${environment.apiUrl}/videos/`, { title });
+  }
+
+  deleteVideo(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/videos/${id}/`);
   }
 } 
