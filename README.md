@@ -7,9 +7,11 @@
 [![Ollama](https://img.shields.io/badge/Ollama-Latest-orange)](https://ollama.ai/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/randysim/news-to-go/pulls)
 
-A fullstack application built using Angular, Django/rest-framework, and Ollama. Converts any news article into a short form video! [DEMO VIDEO](https://www.youtube.com/watch?v=fRwPuwTgrfM)
+A fullstack application built using Angular, Django/rest-framework, and Ollama. Converts any news article into a short form video! 
 
 Instructions to run the frontend and backend are in the respective directories.
+
+[![DEMO VIDEO](https://img.youtube.com/vi/fRwPuwTgrfM/0.jpg)](https://www.youtube.com/watch?v=fRwPuwTgrfM)
 
 ## Usage
 
