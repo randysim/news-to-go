@@ -12,6 +12,7 @@ A fullstack application built using Angular, Django/rest-framework, and Ollama. 
 Instructions to run the frontend and backend are in the respective directories.
 
 [![DEMO VIDEO](https://img.youtube.com/vi/fRwPuwTgrfM/0.jpg)](https://www.youtube.com/watch?v=fRwPuwTgrfM)
+[DEMO VIDEO](https://www.youtube.com/watch?v=fRwPuwTgrfM)
 
 ## Usage
 
